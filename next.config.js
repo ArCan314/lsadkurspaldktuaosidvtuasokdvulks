@@ -1,6 +1,15 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-  reactStrictMode: true,
-}
+const withLess = require('next-with-less');
+const withPlugins = require('next-compose-plugins');
+const withFont = require('next-fonts');
 
-module.exports = nextConfig
+const nextConfig = {
+    reactStrictMode: true,
+};
+
+const plugins = [
+    [withLess, {}],
+    [withFont, {}],
+];
+
+module.exports = withPlugins(plugins, nextConfig);
