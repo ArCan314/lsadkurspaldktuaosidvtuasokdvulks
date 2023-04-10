@@ -22,6 +22,7 @@ const menuItems: MenuProps['items'] = ['流程编辑', '流程优化'].map((labe
     label: labelVal,
 }));
 
+const ZOOM_STEP = 0.2;
 
 const taskNodes: ITaskNodeModel[] = [];
 let taskNodeCount = 0;
@@ -75,10 +76,68 @@ function createStateNode(x: number, y: number) {
     return data.id as string;
 };
 
+function removeNode(node: IDefaultModel): boolean {
+    if (node.clazz !== 'state-node' && node.clazz !== 'task-node')
+        return false;
+    const arr = node.clazz === 'state-node' ? stateNodes : taskNodes;
+
+    const ind = arr.findIndex(val => val.id === node.id);
+    if (ind !== -1) {
+        arr.splice(ind, 1);
+        return true;
+    }
+    return false;
+}
+
+
+function updateItemDisables(origin: ToolBarPanelProps['isIconDisabled'], action: ToolBarItemDisableAction) {
+    const copy = [...origin];
+    const set = (key: ToolBarIconType, val: boolean) => {
+        const ind = copy.findIndex(val => val[0] == key);
+        if (ind !== -1)
+            copy[ind][1] = val;
+    };
+
+    switch (action) {
+        case 'edge-select':
+            set('copy', false); // multi-edge is not allowed
+            set('delete', true);
+            break;
+        case 'node-select':
+            set('copy', true);
+            set('delete', true);
+            break;
+        case 'item-delete':
+            // set('undo', true); // not implemented
+            set('copy', false);
+            set('delete', false);
+            break;
+        case 'redo':
+            // set('undo', true); // not implemented
+            break;
+        case 'undo':
+            // set('redo', true); // not implemented
+            break;
+        case 'copy':
+            set('paste', true);
+            break;
+        case 'canvas-select':
+            set('copy', false);
+            set('delete', false);
+            break;
+        default:
+            console.warn(`unhandled action ${action} in ${module.filename}:${updateItemDisables}`);
+            break;
+    }
+    return copy;
+}
+
+let copyBuffer: IDefaultModel = {};
 
 const EditGraphView: React.FC = () => {
     const { token: { colorBgContainer } } = theme.useToken();
     const [selectedModel, setSelectedModel] = useState<IDefaultModel>({});
+    const [toolbarItemDisables, setToolBarItemDisables] = useState<ToolBarPanelProps['isIconDisabled']>(defaultToolBarDisables);
     const [graph, setGraph] = useState<Graph>();
 
     const handleItemClick = (type: CanvasSelectedType, id?: string) => {
@@ -93,10 +152,14 @@ const EditGraphView: React.FC = () => {
             if (item)
                 setSelectedModel(item);
 
+            setToolBarItemDisables(updateItemDisables(toolbarItemDisables, 'node-select'));
         }
         else if (type === 'edge' && id !== undefined) {
+            setToolBarItemDisables(updateItemDisables(toolbarItemDisables, 'edge-select'));
         }
         else {
+            setToolBarItemDisables(updateItemDisables(toolbarItemDisables, 'canvas-select'));
+            setSelectedModel({});
         }
     };
 
@@ -108,6 +171,105 @@ const EditGraphView: React.FC = () => {
         return "";
     };
 
+    const handleToolBarIconClick = (type: ToolBarIconType) => {
+        switch (type) {
+            case 'undo':
+                console.warn('undo is not implemented.')
+                break;
+            case 'redo':
+                console.warn('redo is not implemented')
+                break;
+            case 'copy':
+                if (selectedModel.clazz === 'state-node' || selectedModel.clazz === 'task-node') {
+                    copyBuffer = _.clone(selectedModel);
+                    setToolBarItemDisables(updateItemDisables(toolbarItemDisables, 'copy'));
+                }
+                // TODO: handle error
+                break;
+            case 'paste':
+                if (copyBuffer.clazz === 'state-node' || copyBuffer.clazz === 'task-node') {
+                    const id = createNodeFrom(copyBuffer, 20, 20);
+                    console.log(id);
+                    if (id)
+                        addNode(graph, copyBuffer.x!, copyBuffer.y!, copyBuffer.clazz, id, 20, 20);
+                }
+                // TODO: handle error
+                break;
+            case 'delete':
+                if (selectedModel.clazz === 'state-node' || selectedModel.clazz === 'task-node') {
+                    if (removeNode(selectedModel)) {
+                        if (selectedModel.id !== undefined)
+                            graph?.removeItem(selectedModel.id);
+                        setSelectedModel({});
+                        setToolBarItemDisables(updateItemDisables(toolbarItemDisables, 'item-delete'));
+                    }
+                }
+                else if (selectedModel.clazz === 'state-task-arc' || selectedModel.clazz === 'task-state-arc') {
+                    // TODO: implement delete edge
+                }
+                // TODO: handle error
+                break;
+            case 'zoomIn':
+                {
+                    if (graph === undefined)
+                        break;
+                    const curZoom = graph.getZoom();
+
+                    // if (selectedModel.id !== undefined) {
+                    //     const item = graph.findById(selectedModel.id);
+                    //     const x = item.getBBox().centerX !== undefined ? item.getBBox().centerX! : item.getBBox().x + item.getBBox().width / 2;
+                    //     const y = item.getBBox().centerY !== undefined ? item.getBBox().centerY! : item.getBBox().y + item.getBBox().height / 2;
+                    //     const point = graph.getPointByCanvas(x, y);
+                    //     console.log(point);
+                    //     graph.zoomTo(curZoom + ZOOM_STEP);
+                    // }
+                    // else {
+                    const width = graph.getWidth();
+                    const height = graph.getHeight();
+                    const point = graph.getPointByCanvas(width / 2, height / 2);
+
+                    graph.zoomTo(curZoom + ZOOM_STEP, point);
+                    // }
+                }
+                break;
+            case 'zoomOut':
+                {
+                    if (graph === undefined)
+                        break;
+                    const curZoom = graph.getZoom();
+
+                    // if (selectedModel.id !== undefined) {
+                    //     const item = graph.findById(selectedModel.id);
+                    //     const x = item.getBBox().centerX !== undefined ? item.getBBox().centerX! : item.getBBox().x + item.getBBox().width / 2;
+                    //     const y = item.getBBox().centerY !== undefined ? item.getBBox().centerY! : item.getBBox().y + item.getBBox().height / 2;
+                    //     const point = graph.get(x, y);
+                    //     console.log(point);
+                    //     graph.zoomTo(curZoom - ZOOM_STEP, point);
+                    // }
+                    // else {
+                    const width = graph.getWidth();
+                    const height = graph.getHeight();
+                    const point = graph.getPointByCanvas(width / 2, height / 2);
+
+                    graph.zoomTo(curZoom - ZOOM_STEP, point);
+                    // }
+                }
+                break;
+            case 'resetZoom':
+                {
+                    graph?.zoomTo(1);
+                }
+                break;
+            case 'autoFit':
+                {
+                    graph?.fitView();
+                }
+                break;
+            default:
+                break;
+        };
+
+    };
 
     const handleGraphMount = (graphMounted: Graph) => {
         setGraph(graphMounted);
