@@ -20,11 +20,11 @@ const DefaultDetail: React.FC<DefaultProps> = ({ model, onChange: handleChange, 
                     disabled={readOnly}
                 />
             </div>
-            <div className={styles.panelRow}>
+            {/* <div className={styles.panelRow}>
                 <Checkbox onChange={(e) => handleChange('hideIcon', e.target.checked)}
                     disabled={readOnly}
                     checked={!!model.hideIcon}>隐藏图标</Checkbox>
-            </div>
+            </div> */}
         </>
     );
 };

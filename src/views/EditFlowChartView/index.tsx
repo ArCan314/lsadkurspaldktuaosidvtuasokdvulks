@@ -61,26 +61,28 @@ function createNodeFrom(node: IDefaultModel, xBias?: number, yBias?: number) {
 
 function createTaskNode(x: number, y: number) {
     const data: ITaskNodeModel = {
-        id: `task-node: ${taskNodeCount++}`,
+        id: `task-node: ${taskNodeCount}`,
         active: true,
         clazz: 'task-node',
-        label: '任务节点',
+        label: `任务节点-${taskNodeCount}`,
         x,
         y,
     };
+    taskNodeCount++;
     taskNodes.push(data);
     return data.id as string;
 };
 
 function createStateNode(x: number, y: number) {
     const data: ITaskNodeModel = {
-        id: `state-node: ${stateNodeCount++}`,
+        id: `state-node: ${stateNodeCount}`,
         active: true,
         clazz: 'state-node',
-        label: '状态节点',
+        label: `状态节点-${stateNodeCount}`,
         x,
         y,
     };
+    stateNodeCount++;
     stateNodes.push(data);
     return data.id as string;
 };
