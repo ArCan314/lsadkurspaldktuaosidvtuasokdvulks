@@ -5,8 +5,8 @@ export interface IDefaultModel {
     name?: string;
     clazz?: ModelClass;
     label?: string;
-    x?: number;
-    y?: number;
+    x?: number; // canvasX
+    y?: number; // canvasY
     active?: boolean;
     hideIcon?: boolean;
 };

@@ -1,5 +1,5 @@
 import Head from 'next/head'
-import EditGraphView from '../views/EditFlowChart'
+import EditGraphView from '../views/EditFlowChartView'
 import Link from 'next/link'
 
 export default function Home() {
