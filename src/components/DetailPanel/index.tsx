@@ -1,7 +1,7 @@
 import React from 'react';
 import styles from "./DetailPanel.module.less";
 import { theme } from 'antd';
-import { IDefaultModel, IUnitModel } from '@/types';
+import { DetailKey, IDefaultModel, IUnitModel } from '@/types';
 import StateNodeDetail from './details/StateNodeDetail';
 import TaskNodeDetail from './details/TaskNodeDetail';
 import StateTaskArcDetail from './details/StateTaskArcDetail';
@@ -10,7 +10,7 @@ import TaskStateArcDetail from './details/TaskStateArcDetail';
 export interface IDetailProps {
     model: IDefaultModel;
     units: IUnitModel[];
-    onChange: (...args: any[]) => any;
+    onChange: (key: DetailKey, val: any) => void;
     readonly: boolean;
 };
 

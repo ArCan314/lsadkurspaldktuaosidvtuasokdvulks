@@ -29,6 +29,15 @@ let taskNodeCount = 0;
 const stateNodes: IStateNodeModel[] = [];
 let stateNodeCount = 0;
 
+function updateNode(node: IDefaultModel) {
+    if (node.clazz !== 'state-node' && node.clazz !== 'task-node')
+        return;
+
+    const arr = node.clazz === 'state-node' ? stateNodes : taskNodes;
+    const ind = arr.findIndex(val => val.id === node.id);
+    if (ind !== -1)
+        arr[ind] = _.clone(node);
+}
 
 function createNodeFrom(node: IDefaultModel, xBias?: number, yBias?: number) {
     if (node.clazz !== 'state-node' && node.clazz !== 'task-node')
@@ -89,6 +98,17 @@ function removeNode(node: IDefaultModel): boolean {
     return false;
 }
 
+function updateGraphLabel(graph: Graph, id: string, label: string): boolean {
+    const item = graph.findById(id);
+    if (item.getType() !== 'node' && item.getType() !== 'edge')
+        return false;
+
+    const model = item.getModel();
+    graph.updateItem(item, {
+        label,
+    });
+    return true;
+}
 
 function updateItemDisables(origin: ToolBarPanelProps['isIconDisabled'], action: ToolBarItemDisableAction) {
     const copy = [...origin];
@@ -275,6 +295,43 @@ const EditGraphView: React.FC = () => {
         setGraph(graphMounted);
     };
 
+    const handleDetailChange = (key: DetailKey, val: any) => {
+        const copy = _.clone(selectedModel);
+
+        if (key === 'capacity' && copy.clazz === 'state-node' && (typeof val === 'number' || typeof val === 'string'))
+            (copy as IStateNodeModel).capacity = toNumber(val);
+        else if (key === 'duration' && copy.clazz === 'task-state-arc' && (typeof val === 'number' || typeof val === 'string'))
+            (copy as ITaskStateArcModel).duration = toNumber(val);
+        else if (key === 'hideIcon' && typeof val === 'boolean')
+            copy.hideIcon = val;
+        else if (key === 'initial' && copy.clazz === 'state-node' && (typeof val === 'number' || typeof val === 'string'))
+            (copy as IStateNodeModel).initial = toNumber(val);
+        else if (key === 'label' && typeof val === 'string') {
+            if (graph && copy.id !== undefined)
+                updateGraphLabel(graph, copy.id, val); // TODO: handle error
+            else
+                console.error(`graph is undefined or copy.id === undefined ${{graph, copy}}`);
+            copy.label = val;
+        }
+        else if (key === 'name' && typeof val === 'string')
+            copy.name = val;
+        else if (key === 'price' && copy.clazz === 'state-node' && (typeof val === 'number' || typeof val === 'string'))
+            (copy as IStateNodeModel).price = toNumber(val);
+        else if (key === 'rho' && (copy.clazz === 'state-task-arc' || copy.clazz === 'task-state-arc') && (typeof val === 'number' || typeof val === 'string'))
+            (copy as IStateTaskArcModel).rho = toNumber(val);
+        else if (key === 'unitId' && copy.clazz === 'task-node' && (typeof val === 'number' || typeof val === 'string'))
+            (copy as ITaskNodeModel).unitId = toNumber(val);
+        else
+            console.warn('unhandled detail change type: ', { key, val }, typeof val, copy);
+
+        if (copy.clazz === 'state-node' || copy.clazz === 'task-node')
+            updateNode(copy);
+        else if (copy.clazz === 'state-task-arc' || copy.clazz === 'task-state-arc') {
+            // updateEdge(copy);
+        }
+        
+        setSelectedModel(copy);
+    };
 
     return (
         <Layout style={{ minHeight: '100vh', maxHeight: '100vh', overflow: 'hidden' }}>

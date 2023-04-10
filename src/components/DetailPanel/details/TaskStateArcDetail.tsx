@@ -1,12 +1,12 @@
 import React from "react";
 import styles from "../DetailPanel.module.less";
-import { Input } from "antd";
-import { ITaskStateArcModel } from '@/types';
+import { Input, InputNumber } from "antd";
+import { ITaskStateArcModel, DetailKey } from '@/types';
 import DefaultDetail from "./DefaultDetail";
 
 export interface TaskStateArcDetail {
     model: ITaskStateArcModel;
-    onChange: (...args: any[]) => any;
+    onChange: (key: DetailKey, val: any) => void;
     readOnly: boolean;
 }
 
@@ -20,15 +20,16 @@ const TaskStateArcDetail: React.FC<TaskStateArcDetail> = ({ model, onChange: han
                     <div>百分比: </div>
                     <Input style={{ width: '100%', fontSize: 12 }}
                         value={model.rho}
-                        onChange={(e) => { handleChange('rho', e.target.value) }}
+                        onChange={e => handleChange('rho', e.target.value)}
                         disabled={readOnly}
                     />
                 </div>
                 <div className={styles.panelRow}>
                     <div>耗时: </div>
-                    <Input style={{ width: '100%', fontSize: 12 }}
+                    <InputNumber style={{ width: '100%', fontSize: 12 }}
                         value={model.duration}
-                        onChange={(e) => { handleChange('duration', e.target.value) }}
+                        min={0}
+                        onChange={val => handleChange('duration', val)}
                         disabled={readOnly}
                     />
                 </div>

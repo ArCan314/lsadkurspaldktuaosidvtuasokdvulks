@@ -1,11 +1,11 @@
 import React from "react";
 import styles from "../DetailPanel.module.less";
 import { Checkbox, Input } from "antd";
-import { IDefaultModel } from '@/types';
+import { DetailKey, IDefaultModel } from '@/types';
 
 export interface DefaultProps {
     model: IDefaultModel;
-    onChange: (...args: any[]) => any;
+    onChange: (key: DetailKey, val: any) => void;
     readOnly: boolean;
 }
 
@@ -16,7 +16,7 @@ const DefaultDetail: React.FC<DefaultProps> = ({ model, onChange: handleChange, 
                 <div>标签: </div>
                 <Input style={{ width: '100%', fontSize: 12 }}
                     value={model.label}
-                    onChange={(e) => handleChange('label', e.target.value)}
+                    onChange={e => handleChange('label', e.target.value)}
                     disabled={readOnly}
                 />
             </div>

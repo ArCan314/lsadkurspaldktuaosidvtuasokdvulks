@@ -36,3 +36,6 @@ export interface ITaskStateArcModel extends IDefaultModel {
     rho?: number;
     duration?: number; // in hour 
 };
+
+export type DetailKey = 'label' | 'hideIcon' | 'name' | 'capacity' | 
+                        'initial' | 'price' | 'rho' | 'unitId' | 'duration';

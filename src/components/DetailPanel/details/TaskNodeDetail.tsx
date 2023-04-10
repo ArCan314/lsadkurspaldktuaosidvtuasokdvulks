@@ -1,13 +1,13 @@
 import React from "react";
 import styles from "../DetailPanel.module.less";
 import { Checkbox, Input } from "antd";
-import { ITaskNodeModel, IUnitModel } from '@/types';
+import { ITaskNodeModel, IUnitModel, DetailKey } from '@/types';
 import DefaultDetail from "./DefaultDetail";
 
 export interface TaskNodeProps {
     model: ITaskNodeModel;
     units: IUnitModel[];
-    onChange: (...args: any[]) => any;
+    onChange: (key: DetailKey, val: any) => void;
     readOnly: boolean;
 }
 
@@ -21,7 +21,7 @@ const TaskNodeDetail: React.FC<TaskNodeProps> = ({ model, units, onChange: handl
                     <div>节点名称: </div>
                     <Input style={{ width: '100%', fontSize: 12 }}
                         value={model.name}
-                        onChange={(e) => { handleChange('name', e.target.value) }}
+                        onChange={e => handleChange('name', e.target.value)}
                         disabled={readOnly}
                     />
                 </div>
@@ -29,7 +29,7 @@ const TaskNodeDetail: React.FC<TaskNodeProps> = ({ model, units, onChange: handl
                     <div>设备ID: </div>
                     <Input style={{ width: '100%', fontSize: 12 }}
                         value={model.unitId}
-                        onChange={(e) => { handleChange('unitId', e.target.value) }}
+                        onChange={e => handleChange('unitId', e.target.value)}
                         disabled={readOnly}
                     />
                 </div>
