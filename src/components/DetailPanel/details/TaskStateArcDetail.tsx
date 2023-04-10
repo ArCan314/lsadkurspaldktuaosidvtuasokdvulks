@@ -10,17 +10,17 @@ export interface TaskStateArcDetail {
     readOnly: boolean;
 }
 
-const TaskStateArcDetail: React.FC<TaskStateArcDetail> = ({ model, onChange, readOnly = false, }) => {
+const TaskStateArcDetail: React.FC<TaskStateArcDetail> = ({ model, onChange: handleChange, readOnly = false, }) => {
     return (
         <div>
             <div className={styles.panelTitle}>状态任务边</div>
             <div className={styles.panelBody}>
-                <DefaultDetail model={model} onChange={onChange} readOnly={readOnly} />
+                <DefaultDetail model={model} onChange={handleChange} readOnly={readOnly} />
                 <div className={styles.panelRow}>
                     <div>百分比: </div>
                     <Input style={{ width: '100%', fontSize: 12 }}
                         value={model.rho}
-                        onChange={(e) => { onChange('rho', e.target.value) }}
+                        onChange={(e) => { handleChange('rho', e.target.value) }}
                         disabled={readOnly}
                     />
                 </div>
@@ -28,7 +28,7 @@ const TaskStateArcDetail: React.FC<TaskStateArcDetail> = ({ model, onChange, rea
                     <div>耗时: </div>
                     <Input style={{ width: '100%', fontSize: 12 }}
                         value={model.duration}
-                        onChange={(e) => { onChange('duration', e.target.value) }}
+                        onChange={(e) => { handleChange('duration', e.target.value) }}
                         disabled={readOnly}
                     />
                 </div>

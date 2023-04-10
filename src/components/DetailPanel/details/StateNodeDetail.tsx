@@ -10,17 +10,17 @@ export interface StateNodeProps {
     readOnly: boolean;
 }
 
-const StateNodeDetail: React.FC<StateNodeProps> = ({ model, onChange, readOnly = false, }) => {
+const StateNodeDetail: React.FC<StateNodeProps> = ({ model, onChange: handleChange, readOnly = false, }) => {
     return (
         <div>
             <div className={styles.panelTitle}>状态节点</div>
             <div className={styles.panelBody}>
-                <DefaultDetail model={model} onChange={onChange} readOnly={readOnly} />
+                <DefaultDetail model={model} onChange={handleChange} readOnly={readOnly} />
                 <div className={styles.panelRow}>
                     <div>节点名称: </div>
                     <Input style={{ width: '100%', fontSize: 12 }}
                         value={model.name}
-                        onChange={(e) => { onChange('name', e.target.value) }}
+                        onChange={(e) => { handleChange('name', e.target.value) }}
                         disabled={readOnly}
                     />
                 </div>
@@ -28,7 +28,7 @@ const StateNodeDetail: React.FC<StateNodeProps> = ({ model, onChange, readOnly =
                     <div>状态容量: </div>
                     <Input style={{ width: '100%', fontSize: 12 }}
                         value={model.capacity}
-                        onChange={(e) => { onChange('capacity', e.target.value) }}
+                        onChange={(e) => { handleChange('capacity', e.target.value) }}
                         disabled={readOnly}
                     />
                 </div>
@@ -36,7 +36,7 @@ const StateNodeDetail: React.FC<StateNodeProps> = ({ model, onChange, readOnly =
                     <div>初始量: </div>
                     <Input style={{ width: '100%', fontSize: 12 }}
                         value={model.initial}
-                        onChange={(e) => { onChange('initial', e.target.value) }}
+                        onChange={(e) => { handleChange('initial', e.target.value) }}
                         disabled={readOnly}
                     />
                 </div>
@@ -44,7 +44,7 @@ const StateNodeDetail: React.FC<StateNodeProps> = ({ model, onChange, readOnly =
                     <div>价格: </div>
                     <Input style={{ width: '100%', fontSize: 12 }}
                         value={model.price}
-                        onChange={(e) => { onChange('price', e.target.value) }}
+                        onChange={(e) => { handleChange('price', e.target.value) }}
                         disabled={readOnly}
                     />
                 </div>

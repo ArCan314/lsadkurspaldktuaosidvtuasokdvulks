@@ -14,14 +14,14 @@ export interface IDetailProps {
     readonly: boolean;
 };
 
-const DetailPanel: React.FC<IDetailProps> = ({ model, units, onChange, readonly = false }) => {
+const DetailPanel: React.FC<IDetailProps> = ({ model, units, onChange: handleChange, readonly = false }) => {
     const { token: { colorBgContainer } } = theme.useToken();
     return (
         <div className={styles.detailPanel} style={{ background: colorBgContainer }}>
-            {model.clazz == "state-node" && <StateNodeDetail model={model} onChange={onChange} readOnly={readonly} />}
-            {model.clazz == "task-node" && <TaskNodeDetail model={model} units={units} onChange={onChange} readOnly={readonly} />}
-            {model.clazz == "state-task-arc" && <StateTaskArcDetail model={model} onChange={onChange} readOnly={readonly} />}
-            {model.clazz == "task-state-arc" && <TaskStateArcDetail model={model} onChange={onChange} readOnly={readonly} />}
+            {model.clazz == "state-node" && <StateNodeDetail model={model} onChange={handleChange} readOnly={readonly} />}
+            {model.clazz == "task-node" && <TaskNodeDetail model={model} units={units} onChange={handleChange} readOnly={readonly} />}
+            {model.clazz == "state-task-arc" && <StateTaskArcDetail model={model} onChange={handleChange} readOnly={readonly} />}
+            {model.clazz == "task-state-arc" && <TaskStateArcDetail model={model} onChange={handleChange} readOnly={readonly} />}
         </div>
     );
 };

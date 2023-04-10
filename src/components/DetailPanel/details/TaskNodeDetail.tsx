@@ -11,17 +11,17 @@ export interface TaskNodeProps {
     readOnly: boolean;
 }
 
-const TaskNodeDetail: React.FC<TaskNodeProps> = ({ model, units, onChange, readOnly = false, }) => {
+const TaskNodeDetail: React.FC<TaskNodeProps> = ({ model, units, onChange: handleChange, readOnly = false, }) => {
     return (
         <div>
             <div className={styles.panelTitle}>任务节点</div>
             <div className={styles.panelBody}>
-                <DefaultDetail model={model} onChange={onChange} readOnly={readOnly} />
+                <DefaultDetail model={model} onChange={handleChange} readOnly={readOnly} />
                 <div className={styles.panelRow}>
                     <div>节点名称: </div>
                     <Input style={{ width: '100%', fontSize: 12 }}
                         value={model.name}
-                        onChange={(e) => { onChange('name', e.target.value) }}
+                        onChange={(e) => { handleChange('name', e.target.value) }}
                         disabled={readOnly}
                     />
                 </div>
@@ -29,7 +29,7 @@ const TaskNodeDetail: React.FC<TaskNodeProps> = ({ model, units, onChange, readO
                     <div>设备ID: </div>
                     <Input style={{ width: '100%', fontSize: 12 }}
                         value={model.unitId}
-                        onChange={(e) => { onChange('unitId', e.target.value) }}
+                        onChange={(e) => { handleChange('unitId', e.target.value) }}
                         disabled={readOnly}
                     />
                 </div>

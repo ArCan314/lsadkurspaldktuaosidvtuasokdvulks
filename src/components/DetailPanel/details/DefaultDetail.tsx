@@ -9,19 +9,19 @@ export interface DefaultProps {
     readOnly: boolean;
 }
 
-const DefaultDetail: React.FC<DefaultProps> = ({ model, onChange, readOnly = false, }) => {
+const DefaultDetail: React.FC<DefaultProps> = ({ model, onChange: handleChange, readOnly = false, }) => {
     return (
         <>
             <div className={styles.panelRow}>
                 <div>标签: </div>
                 <Input style={{ width: '100%', fontSize: 12 }}
                     value={model.label}
-                    onChange={(e) => onChange('label', e.target.value)}
+                    onChange={(e) => handleChange('label', e.target.value)}
                     disabled={readOnly}
                 />
             </div>
             <div className={styles.panelRow}>
-                <Checkbox onChange={(e) => onChange('hideIcon', e.target.checked)}
+                <Checkbox onChange={(e) => handleChange('hideIcon', e.target.checked)}
                     disabled={readOnly}
                     checked={!!model.hideIcon}>隐藏图标</Checkbox>
             </div>
