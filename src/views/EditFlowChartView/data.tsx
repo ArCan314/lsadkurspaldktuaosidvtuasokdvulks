@@ -11,4 +11,6 @@ export const defaultToolBarDisables: ToolBarPanelProps['isIconDisabled'] =
     ["zoomOut", true],
     ["resetZoom", true],
     ["autoFit", true],
+    ["import", true],
+    ["export", true],
 ];

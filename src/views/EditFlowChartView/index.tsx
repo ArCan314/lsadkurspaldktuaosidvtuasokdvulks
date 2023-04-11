@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MenuProps } from 'antd';
+import { Button, MenuProps, message } from 'antd';
 import { Layout, Menu, theme } from 'antd';
 import ToolBarPanel, { ToolBarPanelProps } from '@/components/ToolBarPanel';
 import ItemPanel from '@/components/ItemPanel';
@@ -213,6 +213,28 @@ function updateGraphLabel(graph: Graph, id: string, label: string): boolean {
         label,
     });
     return true;
+};
+
+function exportJSON(): boolean {
+    const obj = {
+        taskNodes,
+        stateNodes,
+        tsArcs,
+        stArcs,
+    };
+    console.log(obj);
+    const exportStr = JSON.stringify(obj);
+    navigator.clipboard.writeText(exportStr);
+
+    message.info('已导出至剪切板');
+    return true;
+};
+
+function importJSON(graph: Graph | undefined): boolean {
+    // not implemented
+    if (graph === undefined)
+        return false;
+    return true;
 }
 
 function updateItemDisables(origin: ToolBarPanelProps['isIconDisabled'], action: ToolBarItemDisableAction) {
@@ -295,6 +317,14 @@ const EditGraphView: React.FC = () => {
             return createStateNode(x, y);
         return "";
     };
+
+    const handleExport = () => {
+        return exportJSON();
+    }
+
+    const handleImport = () => {
+        return importJSON(graph);
+    }
 
     const handleToolBarIconClick = (type: ToolBarIconType) => {
         switch (type) {
@@ -388,16 +418,19 @@ const EditGraphView: React.FC = () => {
                 }
                 break;
             case 'resetZoom':
-                {
-                    graph?.zoomTo(1);
-                }
+                graph?.zoomTo(1);
                 break;
             case 'autoFit':
-                {
-                    graph?.fitView();
-                }
+                graph?.fitView();
+                break;
+            case 'import':
+                handleImport();
+                break;
+            case 'export':
+                handleExport(); // TODO: handle error
                 break;
             default:
+                console.warn('unhandled tool bar icon click: ', { type });
                 break;
         };
 

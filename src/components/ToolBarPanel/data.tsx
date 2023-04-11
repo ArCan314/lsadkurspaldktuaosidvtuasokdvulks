@@ -1,6 +1,8 @@
-import { IconDefinition, faCopy, faMagnifyingGlass, faMagnifyingGlassMinus, faMagnifyingGlassPlus, faMaximize, faPaste, faRotateLeft, faRotateRight, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { IconDefinition, faCopy, faFileExport, faFileImport, faMagnifyingGlass, faMagnifyingGlassMinus, faMagnifyingGlassPlus, faMaximize, faPaste, faRotateLeft, faRotateRight, faTrash } from "@fortawesome/free-solid-svg-icons";
 
-export type ToolBarIconType = 'undo' | 'redo' | 'copy' | 'paste' | 'delete' | 'zoomIn' | 'zoomOut' | 'resetZoom' | 'autoFit';
+export type ToolBarIconType = 'undo' | 'redo' | 'copy' | 'paste' | 
+                              'delete' | 'zoomIn' | 'zoomOut' | 'resetZoom' | 
+                              'autoFit' | 'export' | 'import';
 
 export interface ToolBarItem {
     title: string;
@@ -58,6 +60,18 @@ export const toolBarData: ToolBarItem[][] = [
             title: "适合画布",
             type: "autoFit",
             icon: faMaximize,
+        },
+    ],
+    [
+        {
+            title: "导出",
+            type: "export",
+            icon: faFileExport,
+        },
+        {
+            title: "导入",
+            type: "import",
+            icon: faFileImport,
         },
     ]
 
