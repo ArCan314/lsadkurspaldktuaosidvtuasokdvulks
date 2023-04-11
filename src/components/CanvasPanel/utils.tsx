@@ -17,8 +17,14 @@ function getLabel(shape: ModelClass) {
     return '';
 }
 
-export const addNode = (graph: Graph | undefined, x: number, y: number, shape: ModelClass, id: string, xBias?: number, yBias?: number) => {
-    graph?.addItem('node', {
+export const addNode = (graph: Graph | undefined, x: number | undefined, y: number | undefined, shape: ModelClass, id: string, xBias?: number, yBias?: number) => {
+    if (graph === undefined)
+        return false;
+    
+    x = x ?? graph?.getGraphCenterPoint().x ?? 0;
+    y = y ?? graph?.getGraphCenterPoint().y ?? 0;
+
+    graph.addItem('node', {
         x: x + (xBias ? xBias : 0),
         y: y + (yBias ? yBias : 0),
         anchorPoints: [[0.5, 0], [0, 0.5], [1, 0.5], [0.5, 1]],
@@ -27,6 +33,7 @@ export const addNode = (graph: Graph | undefined, x: number, y: number, shape: M
         size: shape === "state-node" ? 70 : [80, 50],
         type: getType(shape),
     });
+    return true;
 };
 
 // 可能存在问题, 并且可能只能用于特定的 antv g6 版本

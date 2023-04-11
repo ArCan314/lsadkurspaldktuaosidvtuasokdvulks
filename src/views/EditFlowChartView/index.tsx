@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, MenuProps, message } from 'antd';
+import { MenuProps, message } from 'antd';
 import { Layout, Menu, theme } from 'antd';
 import ToolBarPanel, { ToolBarPanelProps } from '@/components/ToolBarPanel';
 import ItemPanel from '@/components/ItemPanel';
@@ -11,7 +11,8 @@ import { ToolBarIconType } from '@/components/ToolBarPanel/data';
 import { Graph } from '@antv/g6';
 import { addNode } from '@/components/CanvasPanel/utils';
 import _ from 'lodash';
-import { generateArcId, isStateNode, isTaskNode, toNumber } from './utils';
+import { generateArcId, isStateNode, isTaskNode, toNumber, validateImportedJSON } from './utils';
+import ImportModal from '@/components/Modals/ImportModal';
 
 export type ToolBarItemDisableAction = 'node-select' | 'edge-select' | 'item-delete' | 'redo' | 'undo' | 'canvas-select' | 'copy';
 
@@ -215,25 +216,59 @@ function updateGraphLabel(graph: Graph, id: string, label: string): boolean {
     return true;
 };
 
-function exportJSON(): boolean {
+function exportJSON(graph: Graph | undefined): boolean {
+    if (graph === undefined)
+        return false;
+
     const obj = {
         taskNodes,
         stateNodes,
         tsArcs,
         stArcs,
+        taskNodeCount,
+        stateNodeCount,
+        graphData: graph.save(),
     };
     console.log(obj);
     const exportStr = JSON.stringify(obj);
-    navigator.clipboard.writeText(exportStr);
-
-    message.info('已导出至剪切板');
+    navigator.clipboard.writeText(exportStr)
+        .then(() => message.info('已导出至剪切板'));
+    
     return true;
 };
 
-function importJSON(graph: Graph | undefined): boolean {
+function importJSON(graph: Graph | undefined, content: string): boolean {
     // not implemented
     if (graph === undefined)
         return false;
+    let obj;
+    try {
+        obj = JSON.parse(content);
+    } catch (objError) {
+        console.error(objError);
+        return false;
+    }
+
+    if (!validateImportedJSON(obj))
+        return false;
+
+    taskNodes.splice(0, taskNodes.length);
+    taskNodes.push(...obj.taskNodes);
+    
+    stateNodes.splice(0, stateNodes.length);
+    stateNodes.push(...obj.stateNodes);
+
+    stArcs.splice(0, stArcs.length);
+    stArcs.push(...obj.stArcs);
+
+    tsArcs.splice(0, tsArcs.length);
+    tsArcs.push(...obj.tsArcs);
+
+    taskNodeCount = obj.taskNodeCount;
+    stateNodeCount = obj.stateNodeCount;
+
+    graph.changeData(obj.graphData);
+    console.log({taskNodes, stateNodes, stArcs, tsArcs, data: graph.save()});
     return true;
 }
 
@@ -288,6 +323,7 @@ const EditGraphView: React.FC = () => {
     const [selectedModel, setSelectedModel] = useState<IDefaultModel>({});
     const [toolbarItemDisables, setToolBarItemDisables] = useState<ToolBarPanelProps['isIconDisabled']>(defaultToolBarDisables);
     const [graph, setGraph] = useState<Graph>();
+    const [isImportModalDisplay, setIsImportModalDisplay] = useState<boolean>(false);
 
     const handleItemClick = (type: CanvasSelectedType, id?: string) => {
         // console.log('click item: ', type, id);
@@ -319,11 +355,11 @@ const EditGraphView: React.FC = () => {
     };
 
     const handleExport = () => {
-        return exportJSON();
+        return exportJSON(graph);
     }
 
     const handleImport = () => {
-        return importJSON(graph);
+        setIsImportModalDisplay(true);
     }
 
     const handleToolBarIconClick = (type: ToolBarIconType) => {
@@ -489,32 +525,41 @@ const EditGraphView: React.FC = () => {
     }
 
     return (
-        <Layout style={{ minHeight: '100vh', maxHeight: '100vh', overflow: 'hidden' }}>
-            <Header className="header">
-                <div className="logo" />
-                <Menu theme="dark" mode="horizontal" defaultSelectedKeys={['0']} items={menuItems} />
-            </Header>
+        <>
+            <ImportModal
+                isDisplay={isImportModalDisplay}
+                onCancel={() => setIsImportModalDisplay(false)}
+                onOk={(content) => { importJSON(graph, content) || message.error('导入失败'); setIsImportModalDisplay(false); }}
+            />
 
-            <ToolBarPanel onIconClick={handleToolBarIconClick} isIconDisabled={toolbarItemDisables} />
-            <Layout hasSider={true}>
-                <Sider width={150} style={{ background: colorBgContainer }}>
-                    <ItemPanel />
-                </Sider>
-                <Content>
-                    <CanvasPanel
-                        onNodeCreate={handleNodeCreate}
-                        onItemClick={handleItemClick}
-                        hasEdge={hasEdge}
-                        graph={graph}
-                        onGraphMount={handleGraphMount}
-                        onEdgeCreate={handleEdgeCreate}
-                    />
-                </Content>
-                <Sider width={300}>
-                    <DetailPanel model={selectedModel} units={[]} onChange={handleDetailChange} readonly={false} />
-                </Sider>
+            <Layout style={{ minHeight: '100vh', maxHeight: '100vh', overflow: 'hidden' }}>
+                <Header className="header">
+                    <div className="logo" />
+                    <Menu theme="dark" mode="horizontal" defaultSelectedKeys={['0']} items={menuItems} />
+                </Header>
+
+                <ToolBarPanel onIconClick={handleToolBarIconClick} isIconDisabled={toolbarItemDisables} />
+                <Layout hasSider={true}>
+                    <Sider width={150} style={{ background: colorBgContainer }}>
+                        <ItemPanel />
+                    </Sider>
+                    <Content>
+                        <CanvasPanel
+                            onNodeCreate={handleNodeCreate}
+                            onItemClick={handleItemClick}
+                            hasEdge={hasEdge}
+                            graph={graph}
+                            onGraphMount={handleGraphMount}
+                            onEdgeCreate={handleEdgeCreate}
+                        />
+                    </Content>
+                    <Sider width={300}>
+                        <DetailPanel model={selectedModel} units={[]} onChange={handleDetailChange} readonly={false} />
+                    </Sider>
+                </Layout>
             </Layout>
-        </Layout>
+        </>
+
     );
 };
 
