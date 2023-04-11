@@ -1,13 +1,13 @@
+import OptimizationFlowView from '@/views/OptimizationFlowView'
 import Head from 'next/head'
-import EditGraphView from '../views/EditFlowChartView'
 
 export default function Home() {
     return (
         <div>
             <Head>
-                <title>流程编辑</title>
+                <title>流程优化</title>
             </Head>
-            <EditGraphView />
+            <OptimizationFlowView/>
         </div>
     )
 }

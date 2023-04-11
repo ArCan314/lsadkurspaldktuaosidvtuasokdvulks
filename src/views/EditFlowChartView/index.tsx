@@ -13,6 +13,7 @@ import { addNode } from '@/components/CanvasPanel/utils';
 import _ from 'lodash';
 import { generateArcId, isStateNode, isTaskNode, toNumber, validateImportedJSON } from './utils';
 import ImportModal from '@/components/Modals/ImportModal';
+import Router from 'next/router';
 
 export type ToolBarItemDisableAction = 'node-select' | 'edge-select' | 'item-delete' | 'redo' | 'undo' | 'canvas-select' | 'copy';
 
@@ -216,9 +217,9 @@ function updateGraphLabel(graph: Graph, id: string, label: string): boolean {
     return true;
 };
 
-function exportJSON(graph: Graph | undefined): boolean {
+function generateExportJSON(graph: Graph | undefined): string {
     if (graph === undefined)
-        return false;
+        return '';
 
     const obj = {
         taskNodes,
@@ -229,11 +230,20 @@ function exportJSON(graph: Graph | undefined): boolean {
         stateNodeCount,
         graphData: graph.save(),
     };
-    console.log(obj);
+    // console.log(obj);
     const exportStr = JSON.stringify(obj);
+    return exportStr;
+};
+
+function exportJSON(graph: Graph | undefined): boolean {
+    if (graph === undefined)
+        return false;
+
+
+    const exportStr = generateExportJSON(graph);
     navigator.clipboard.writeText(exportStr)
         .then(() => message.info('已导出至剪切板'));
-    
+
     return true;
 };
 
@@ -254,7 +264,7 @@ function importJSON(graph: Graph | undefined, content: string): boolean {
 
     taskNodes.splice(0, taskNodes.length);
     taskNodes.push(...obj.taskNodes);
-    
+
     stateNodes.splice(0, stateNodes.length);
     stateNodes.push(...obj.stateNodes);
 
@@ -268,7 +278,7 @@ function importJSON(graph: Graph | undefined, content: string): boolean {
     stateNodeCount = obj.stateNodeCount;
 
     graph.changeData(obj.graphData);
-    console.log({taskNodes, stateNodes, stArcs, tsArcs, data: graph.save()});
+    // console.log({ taskNodes, stateNodes, stArcs, tsArcs, data: graph.save() });
     return true;
 }
 
@@ -318,12 +328,35 @@ function updateItemDisables(origin: ToolBarPanelProps['isIconDisabled'], action:
 
 let copyBuffer: IDefaultModel = {};
 
+let graph: Graph | undefined;
+
+Router.events.on('routeChangeStart', (...args) => {
+    if (args[0] === '/optimization') {
+        // console.log('out: /');
+        localStorage.setItem('graph', generateExportJSON(graph));
+    }
+});
+
+Router.events.on('routeChangeComplete', (...args) => {
+    if (args[0] === '/') {
+        // console.log('in: /');
+        const graphData = localStorage.getItem('graph');
+        if (graphData !== null)
+            importJSON(graph, graphData);
+    }
+});
+
 const EditGraphView: React.FC = () => {
     const { token: { colorBgContainer } } = theme.useToken();
     const [selectedModel, setSelectedModel] = useState<IDefaultModel>({});
     const [toolbarItemDisables, setToolBarItemDisables] = useState<ToolBarPanelProps['isIconDisabled']>(defaultToolBarDisables);
-    const [graph, setGraph] = useState<Graph>();
     const [isImportModalDisplay, setIsImportModalDisplay] = useState<boolean>(false);
+    const [graphState, setGraphState] = useState<Graph>();
+
+    const handleMenuClick = (ind: number) => {
+        if (ind == 1)
+            Router.push('/optimization');
+    };
 
     const handleItemClick = (type: CanvasSelectedType, id?: string) => {
         // console.log('click item: ', type, id);
@@ -473,7 +506,9 @@ const EditGraphView: React.FC = () => {
     };
 
     const handleGraphMount = (graphMounted: Graph) => {
-        setGraph(graphMounted);
+        graph = graphMounted;
+        setGraphState(graphMounted);
+        // console.log('graph mounted');
     };
 
     const handleDetailChange = (key: DetailKey, val: any) => {
@@ -535,7 +570,7 @@ const EditGraphView: React.FC = () => {
             <Layout style={{ minHeight: '100vh', maxHeight: '100vh', overflow: 'hidden' }}>
                 <Header className="header">
                     <div className="logo" />
-                    <Menu theme="dark" mode="horizontal" defaultSelectedKeys={['0']} items={menuItems} />
+                    <Menu onClick={e => handleMenuClick(parseInt(e.key))} theme="dark" mode="horizontal" defaultSelectedKeys={['0']} items={menuItems} />
                 </Header>
 
                 <ToolBarPanel onIconClick={handleToolBarIconClick} isIconDisabled={toolbarItemDisables} />
@@ -548,7 +583,7 @@ const EditGraphView: React.FC = () => {
                             onNodeCreate={handleNodeCreate}
                             onItemClick={handleItemClick}
                             hasEdge={hasEdge}
-                            graph={graph}
+                            graph={graphState}
                             onGraphMount={handleGraphMount}
                             onEdgeCreate={handleEdgeCreate}
                         />

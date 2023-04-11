@@ -47,8 +47,7 @@ const CanvasPanel: React.FC<ICanvasPanelProps> = ({
                 const shape = dragEvent.dataTransfer?.getData('shape');
                 if (shape) {
                     let id: string | undefined;
-                    console.log(e);
-
+                    // console.log(e);
 
                     if (shape === 'task-node')
                         id = handleNodeCreate('task-node', e.canvasX, e.canvasY);
@@ -81,6 +80,7 @@ const CanvasPanel: React.FC<ICanvasPanelProps> = ({
 
     useEffect(() => {
         if (!graph) {
+            // console.log('start mount graph');
             console.assert(ref.current, `ref.current is ${ref.current}!`)
 
             const snapLine = new SnapLine();
