@@ -30,11 +30,15 @@ export interface IUnitModel extends IDefaultModel {
 
 export interface IStateTaskArcModel extends IDefaultModel {
     rho?: number;
+    fromId?: string;
+    toId?: string; 
 };
 
 export interface ITaskStateArcModel extends IDefaultModel {
     rho?: number;
-    duration?: number; // in hour 
+    duration?: number; // in hour
+    fromId?: string;
+    toId?: string;
 };
 
 export type DetailKey = 'label' | 'hideIcon' | 'name' | 'capacity' | 

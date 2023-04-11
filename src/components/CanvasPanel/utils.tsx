@@ -28,3 +28,26 @@ export const addNode = (graph: Graph | undefined, x: number, y: number, shape: M
         type: getType(shape),
     });
 };
+
+// 可能存在问题, 并且可能只能用于特定的 antv g6 版本
+export const modifyItemId = (graph: Graph | undefined, originId: string, targetId: string): boolean => {
+    if (graph === undefined)
+        return false;
+
+    const item = graph.findById(originId);
+    if (!item)
+        return false;
+
+    const map = (graph as any).cfg.itemMap;
+    if (map === undefined)
+        return false;
+
+    item.set('id', targetId);
+    graph.updateItem(item, {
+        id: targetId
+    });
+
+    map[targetId] = item;
+    delete map[originId];
+    return true;
+};

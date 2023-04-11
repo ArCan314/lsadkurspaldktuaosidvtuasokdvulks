@@ -18,9 +18,13 @@ const TaskStateArcDetail: React.FC<TaskStateArcDetail> = ({ model, onChange: han
                 <DefaultDetail model={model} onChange={handleChange} readOnly={readOnly} />
                 <div className={styles.panelRow}>
                     <div>百分比: </div>
-                    <Input style={{ width: '100%', fontSize: 12 }}
+                    <InputNumber style={{ width: '100%', fontSize: 12 }}
                         value={model.rho}
-                        onChange={e => handleChange('rho', e.target.value)}
+                        max={100}
+                        min={0}
+                        onChange={val => handleChange('rho', val)}
+                        formatter={val => `${val}%`}
+                        parser={val => val!.replace('%', '')}
                         disabled={readOnly}
                     />
                 </div>

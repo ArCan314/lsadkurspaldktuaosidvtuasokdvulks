@@ -11,7 +11,7 @@ import { ToolBarIconType } from '@/components/ToolBarPanel/data';
 import { Graph } from '@antv/g6';
 import { addNode } from '@/components/CanvasPanel/utils';
 import _ from 'lodash';
-import { toNumber } from './utils';
+import { generateArcId, isStateNode, isTaskNode, toNumber } from './utils';
 
 export type ToolBarItemDisableAction = 'node-select' | 'edge-select' | 'item-delete' | 'redo' | 'undo' | 'canvas-select' | 'copy';
 
@@ -37,6 +37,10 @@ function updateNode(node: IDefaultModel) {
     const ind = arr.findIndex(val => val.id === node.id);
     if (ind !== -1)
         arr[ind] = _.clone(node);
+}
+
+function findNodeById(id: string) {
+    return taskNodes.find(val => val.id === id) ?? stateNodes.find(val => val.id === id);
 }
 
 function createNodeFrom(node: IDefaultModel, xBias?: number, yBias?: number) {
@@ -87,7 +91,7 @@ function createStateNode(x: number, y: number) {
     return data.id as string;
 };
 
-function removeNode(node: IDefaultModel): boolean {
+function removeNode(node: IDefaultModel, graph: Graph | undefined): boolean {
     if (node.clazz !== 'state-node' && node.clazz !== 'task-node')
         return false;
     const arr = node.clazz === 'state-node' ? stateNodes : taskNodes;
@@ -95,9 +99,108 @@ function removeNode(node: IDefaultModel): boolean {
     const ind = arr.findIndex(val => val.id === node.id);
     if (ind !== -1) {
         arr.splice(ind, 1);
+        if (node.id)
+            graph?.removeItem(node.id);
+
+        removeConnectedEdge(node, graph);
         return true;
     }
     return false;
+}
+
+const tsArcs: ITaskStateArcModel[] = [];
+const stArcs: IStateTaskArcModel[] = [];
+
+function updateEdge(edge: IDefaultModel) {
+    if (edge.clazz !== 'state-task-arc' && edge.clazz !== 'task-state-arc')
+        return;
+
+    const arr = edge.clazz === 'state-task-arc' ? stArcs : tsArcs;
+    const ind = arr.findIndex(val => val.id === edge.id);
+    if (ind !== -1)
+        arr[ind] = _.clone(edge);
+}
+
+function hasEdge(fromId: string, toId: string): boolean {
+    return !!tsArcs.find(val => val.fromId === fromId && val.toId === toId) ||
+        !!stArcs.find(val => val.fromId === fromId && val.toId === toId);
+}
+
+function findEdge(fromId: string, toId: string) {
+    return findEdgeById(generateArcId(fromId, toId));
+}
+
+function findEdgeById(id: string) {
+    return tsArcs.find(val => val.id === id) ?? stArcs.find(val => val.id === id);
+}
+
+function removeEdge(edge: IDefaultModel, graph: Graph | undefined): boolean {
+    if (edge.clazz !== 'state-task-arc' && edge.clazz !== 'task-state-arc')
+        return false;
+
+    const arr = edge.clazz === 'state-task-arc' ? stArcs : tsArcs;
+    const ind = arr.findIndex(val => val.id === edge.id);
+    if (ind !== -1) {
+        arr.splice(ind, 1);
+        if (edge.id)
+            graph?.removeItem(edge.id);
+
+        return true;
+    }
+    return false;
+}
+
+// Used by removeNode
+function removeConnectedEdge(node: IDefaultModel, graph: Graph | undefined): boolean {
+    if (node.id === undefined)
+        return false;
+
+    const removeEdge = (arr: IDefaultModel[], id: string) => {
+        const toRemoveInds = [];
+        for (let i = 0; i < arr.length; i++)
+            if (arr[i].id !== undefined && arr[i].id?.includes(id))
+                toRemoveInds.push(i);
+
+        for (let i = toRemoveInds.length - 1; i >= 0; i--) {
+            const arc = arr[i];
+            arr.splice(i, 1);
+            if (arc.id !== undefined)
+                graph?.removeItem(arc.id);
+        }
+    };
+
+    removeEdge(tsArcs, node.id);
+    removeEdge(stArcs, node.id);
+    return true;
+}
+
+function createArc(fromId: string, toId: string): string {
+    const isFromTaskNode = isTaskNode(fromId), isToTaskNode = isTaskNode(toId);
+    if ((isFromTaskNode && isToTaskNode) || (!isFromTaskNode && !isToTaskNode))
+        return '';
+
+    let arr = isFromTaskNode ? tsArcs : stArcs;
+    const clazz: ModelClass = isFromTaskNode ? 'task-state-arc' : 'state-task-arc';
+
+    arr.push({
+        id: generateArcId(fromId, toId),
+        active: true,
+        label: '',
+        clazz,
+        fromId: fromId,
+        toId: toId,
+    });
+
+    if (clazz === 'state-task-arc') {
+        const arc = arr[arr.length - 1];
+        arc.rho = 0;
+    }
+    else { // clazz === 'task-state-arc'
+        const arc = arr[arr.length - 1];
+        arc.rho = 0;
+        (arc as ITaskStateArcModel).duration = 0;
+    }
+    return arr[arr.length - 1].id!;
 }
 
 function updateGraphLabel(graph: Graph, id: string, label: string): boolean {
@@ -135,9 +238,11 @@ function updateItemDisables(origin: ToolBarPanelProps['isIconDisabled'], action:
             set('delete', false);
             break;
         case 'redo':
+            console.error('redo method is not implemented');
             // set('undo', true); // not implemented
             break;
         case 'undo':
+            console.error('undo method is not implemented');
             // set('redo', true); // not implemented
             break;
         case 'copy':
@@ -163,20 +268,18 @@ const EditGraphView: React.FC = () => {
     const [graph, setGraph] = useState<Graph>();
 
     const handleItemClick = (type: CanvasSelectedType, id?: string) => {
-        console.log('click item: ', type, id);
+        // console.log('click item: ', type, id);
         if (type === 'node' && id !== undefined) {
-            let item: IDefaultModel | undefined;
-            if (id.startsWith('task-node'))
-                item = taskNodes.find(v => v.id === id);
-            else if (id.startsWith('state-node'))
-                item = stateNodes.find(v => v.id === id);
-
-            if (item)
-                setSelectedModel(item);
+            const node = findNodeById(id);
+            if (node)
+                setSelectedModel(node);
 
             setToolBarItemDisables(updateItemDisables(toolbarItemDisables, 'node-select'));
         }
         else if (type === 'edge' && id !== undefined) {
+            const edge = findEdgeById(id);
+            if (edge)
+                setSelectedModel(edge);
             setToolBarItemDisables(updateItemDisables(toolbarItemDisables, 'edge-select'));
         }
         else {
@@ -185,7 +288,7 @@ const EditGraphView: React.FC = () => {
         }
     };
 
-    const handleItemCreate = (type: ModelClass, x: number, y: number) => {
+    const handleNodeCreate = (type: ModelClass, x: number, y: number) => {
         if (type === 'task-node')
             return createTaskNode(x, y);
         if (type === 'state-node')
@@ -206,6 +309,8 @@ const EditGraphView: React.FC = () => {
                     copyBuffer = _.clone(selectedModel);
                     setToolBarItemDisables(updateItemDisables(toolbarItemDisables, 'copy'));
                 }
+                else
+                    console.warn('unsupported operation copy for item ', _.cloneDeep(selectedModel));
                 // TODO: handle error
                 break;
             case 'paste':
@@ -215,20 +320,25 @@ const EditGraphView: React.FC = () => {
                     if (id)
                         addNode(graph, copyBuffer.x!, copyBuffer.y!, copyBuffer.clazz, id, 20, 20);
                 }
+                else
+                    console.warn('unsupported operation paste for item ', _.cloneDeep(selectedModel));
                 // TODO: handle error
                 break;
             case 'delete':
                 if (selectedModel.clazz === 'state-node' || selectedModel.clazz === 'task-node') {
-                    if (removeNode(selectedModel)) {
-                        if (selectedModel.id !== undefined)
-                            graph?.removeItem(selectedModel.id);
+                    if (removeNode(selectedModel, graph)) {
                         setSelectedModel({});
                         setToolBarItemDisables(updateItemDisables(toolbarItemDisables, 'item-delete'));
                     }
                 }
                 else if (selectedModel.clazz === 'state-task-arc' || selectedModel.clazz === 'task-state-arc') {
-                    // TODO: implement delete edge
+                    if (removeEdge(selectedModel, graph)) {
+                        setSelectedModel({});
+                        setToolBarItemDisables(updateItemDisables(toolbarItemDisables, 'item-delete'));
+                    }
                 }
+                else
+                    console.warn('unsupported operation copy for item ', _.cloneDeep(selectedModel));
                 // TODO: handle error
                 break;
             case 'zoomIn':
@@ -312,7 +422,7 @@ const EditGraphView: React.FC = () => {
             if (graph && copy.id !== undefined)
                 updateGraphLabel(graph, copy.id, val); // TODO: handle error
             else
-                console.error(`graph is undefined or copy.id === undefined ${{graph, copy}}`);
+                console.error(`graph is undefined or copy.id === undefined ${{ graph, copy }}`);
             copy.label = val;
         }
         else if (key === 'name' && typeof val === 'string')
@@ -329,11 +439,21 @@ const EditGraphView: React.FC = () => {
         if (copy.clazz === 'state-node' || copy.clazz === 'task-node')
             updateNode(copy);
         else if (copy.clazz === 'state-task-arc' || copy.clazz === 'task-state-arc') {
-            // updateEdge(copy);
+            updateEdge(copy);
         }
-        
+
         setSelectedModel(copy);
     };
+
+    const handleEdgeCreate = (fromId: string, toId: string): [string, ModelClass] => {
+        if (isTaskNode(fromId) && isStateNode(toId))
+            return [createArc(fromId, toId), 'task-state-arc'];
+        else if (isStateNode(fromId) && isTaskNode(toId))
+            return [createArc(fromId, toId), 'state-task-arc'];
+        else
+            console.log('unhandled edge create ', fromId, toId);
+        return ['', 'state-task-arc'];
+    }
 
     return (
         <Layout style={{ minHeight: '100vh', maxHeight: '100vh', overflow: 'hidden' }}>
@@ -348,7 +468,14 @@ const EditGraphView: React.FC = () => {
                     <ItemPanel />
                 </Sider>
                 <Content>
-                    <CanvasPanel onItemCreate={handleItemCreate} onItemClick={handleItemClick} graph={graph} onGraphMount={handleGraphMount} />
+                    <CanvasPanel
+                        onNodeCreate={handleNodeCreate}
+                        onItemClick={handleItemClick}
+                        hasEdge={hasEdge}
+                        graph={graph}
+                        onGraphMount={handleGraphMount}
+                        onEdgeCreate={handleEdgeCreate}
+                    />
                 </Content>
                 <Sider width={300}>
                     <DetailPanel model={selectedModel} units={[]} onChange={handleDetailChange} readonly={false} />
