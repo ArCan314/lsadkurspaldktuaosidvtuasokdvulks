@@ -32,9 +32,12 @@ export const validateImportedJSON = (obj: unknown): boolean => {
 
     // TODO: validate units
 
-    if (Object.keys(obj).length !== 7 || !('taskNodes' in obj) || !('stateNodes' in obj) ||
-        !('tsArcs' in obj) || !('stArcs' in obj) || !('graphData' in obj) ||
-        !('taskNodeCount' in obj) || !('stateNodeCount' in obj))
+    if (Object.keys(obj).length !== 9 || 
+        !('taskNodes' in obj) || !('stateNodes' in obj) ||
+        !('tsArcs' in obj) || !('stArcs' in obj) || 
+        !('graphData' in obj) || !('taskNodeCount' in obj) || 
+        !('stateNodeCount' in obj) || !('unitCount' in obj) ||
+        !('units' in obj))
         return false;
 
     // TODO: validate inside object

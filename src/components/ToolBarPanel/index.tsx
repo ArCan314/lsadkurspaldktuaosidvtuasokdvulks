@@ -1,5 +1,5 @@
 import React, { Fragment } from "react";
-import { Tooltip } from "antd";
+import { Button, Tooltip } from "antd";
 import styles from "./ToolBarPanel.module.less";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { ToolBarIconType, ToolBarItem, toolBarData } from "./data";
@@ -47,6 +47,10 @@ const ToolBarPanel: React.FC<ToolBarPanelProps> = ({ onIconClick: handleIconClic
     return (
         <div className={styles.toolbar}>
             {toRender}
+            <Button
+                style={{ marginLeft: 'auto', marginRight: '30px' }}
+                onClick={() => handleIconClick('unitList')}>
+                设备列表</Button>
         </div>
     );
 };

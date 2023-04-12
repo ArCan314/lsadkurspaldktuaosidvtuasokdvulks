@@ -2,7 +2,7 @@ import { IconDefinition, faCopy, faFileExport, faFileImport, faMagnifyingGlass, 
 
 export type ToolBarIconType = 'undo' | 'redo' | 'copy' | 'paste' | 
                               'delete' | 'zoomIn' | 'zoomOut' | 'resetZoom' | 
-                              'autoFit' | 'export' | 'import';
+                              'autoFit' | 'export' | 'import' | 'unitList';
 
 export interface ToolBarItem {
     title: string;

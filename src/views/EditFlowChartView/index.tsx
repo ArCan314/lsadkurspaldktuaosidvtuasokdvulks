@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { MenuProps, message } from 'antd';
 import { Layout, Menu, theme } from 'antd';
 import ToolBarPanel, { ToolBarPanelProps } from '@/components/ToolBarPanel';
 import ItemPanel from '@/components/ItemPanel';
 import CanvasPanel, { CanvasSelectedType } from '@/components/CanvasPanel';
 import DetailPanel from '@/components/DetailPanel';
-import { DetailKey, IDefaultModel, IStateNodeModel, IStateTaskArcModel, ITaskNodeModel, ITaskStateArcModel, ModelClass } from '@/types';
+import { DetailKey, IDefaultModel, IStateNodeModel, IStateTaskArcModel, ITaskNodeModel, ITaskStateArcModel, IUnitModel, ModelClass } from '@/types';
 import { defaultToolBarDisables } from './data';
 import { ToolBarIconType } from '@/components/ToolBarPanel/data';
 import { Graph } from '@antv/g6';
@@ -14,6 +14,7 @@ import _ from 'lodash';
 import { generateArcId, isStateNode, isTaskNode, toNumber, validateImportedJSON } from './utils';
 import ImportModal from '@/components/Modals/ImportModal';
 import Router from 'next/router';
+import UnitListModal, { IUnitTableRowData } from '@/components/Modals/UnitListModal';
 
 export type ToolBarItemDisableAction = 'node-select' | 'edge-select' | 'item-delete' | 'redo' | 'undo' | 'canvas-select' | 'copy';
 
@@ -187,7 +188,7 @@ function createArc(fromId: string, toId: string): string {
     arr.push({
         id: generateArcId(fromId, toId),
         active: true,
-        label: '',
+        label: generateArcId(fromId, toId),
         clazz,
         fromId: fromId,
         toId: toId,
@@ -229,6 +230,8 @@ function generateExportJSON(graph: Graph | undefined): string {
         taskNodeCount,
         stateNodeCount,
         graphData: graph.save(),
+        unitCount: unitCount,
+        units: unitsReadOnlyCopy,
     };
     // console.log(obj);
     const exportStr = JSON.stringify(obj);
@@ -238,7 +241,6 @@ function generateExportJSON(graph: Graph | undefined): string {
 function exportJSON(graph: Graph | undefined): boolean {
     if (graph === undefined)
         return false;
-
 
     const exportStr = generateExportJSON(graph);
     navigator.clipboard.writeText(exportStr)
@@ -276,6 +278,8 @@ function importJSON(graph: Graph | undefined, content: string): boolean {
 
     taskNodeCount = obj.taskNodeCount;
     stateNodeCount = obj.stateNodeCount;
+    unitCount = obj.unitCount;
+    unitsReadOnlyCopy = obj.units;
 
     graph.changeData(obj.graphData);
     // console.log({ taskNodes, stateNodes, stArcs, tsArcs, data: graph.save() });
@@ -346,12 +350,82 @@ Router.events.on('routeChangeComplete', (...args) => {
     }
 });
 
+let unitsReadOnlyCopy: IUnitModel[] = [];
+let unitCount = 0;
+
 const EditGraphView: React.FC = () => {
     const { token: { colorBgContainer } } = theme.useToken();
     const [selectedModel, setSelectedModel] = useState<IDefaultModel>({});
     const [toolbarItemDisables, setToolBarItemDisables] = useState<ToolBarPanelProps['isIconDisabled']>(defaultToolBarDisables);
     const [isImportModalDisplay, setIsImportModalDisplay] = useState<boolean>(false);
+    const [isUnitListModalDisplay, setIsUnitListModalDisplay] = useState<boolean>(false);
     const [graphState, setGraphState] = useState<Graph>();
+    const [units, setUnits] = useState<IUnitModel[]>([{ id: 'test', name: 'test', minInput: 0, maxInput: undefined, startUpCost: 100, executeCost: 100 }]);
+
+
+    useEffect(() => {
+        setUnits(unitsReadOnlyCopy);
+    }, [])
+
+    const setUnitsState = (units: IUnitModel[]) => {
+        unitsReadOnlyCopy = units;
+        setUnits(units);
+    }
+
+    const addEmptyUnit = () => {
+        const copy = [...units];
+        copy.push({
+            id: `unit: ${unitCount++}`,
+        });
+        setUnitsState(copy);
+    };
+
+    const deleteUnit = (unitId: string) => {
+        const copy = [...units].filter(val => val.id !== unitId);
+        setUnitsState(copy);
+    };
+
+    const updateUnit = (unitId: string, key: keyof IUnitTableRowData, val: unknown) => {
+        const copy = [...units];
+        const unit = copy.find(val => val.id === unitId);
+
+        if (unit === undefined)
+            return;
+
+        switch (key) {
+            case 'id':
+                if (typeof val !== 'string')
+                    return;
+                break;
+            case 'name':
+                if (typeof val !== 'string')
+                    return;
+                break;
+            case 'minInput':
+            case 'maxInput':
+            case 'startUpCost':
+            case 'executeCost':
+                if (typeof val !== 'number')
+                    return;
+                break;
+            default:
+                console.warn('unhandled unit update: ', { unitId, key, val });
+                return;
+                break;
+        }
+        unit[key] = val;
+        setUnitsState(copy);
+    };
+
+    const updateUnitObj = (unitId: string, obj: IUnitModel) => {
+        const copy = [...units];
+        const ind = copy.findIndex(val => val.id === unitId);
+        if (ind === -1)
+            return;
+
+        copy[ind] = { ...copy[ind], ...obj };
+        setUnitsState(copy);
+    };
 
     const handleMenuClick = (ind: number) => {
         if (ind == 1)
@@ -389,11 +463,15 @@ const EditGraphView: React.FC = () => {
 
     const handleExport = () => {
         return exportJSON(graph);
-    }
+    };
 
     const handleImport = () => {
         setIsImportModalDisplay(true);
-    }
+    };
+
+    const handleUnitList = () => {
+        setIsUnitListModalDisplay(true);
+    };
 
     const handleToolBarIconClick = (type: ToolBarIconType) => {
         switch (type) {
@@ -498,6 +576,9 @@ const EditGraphView: React.FC = () => {
             case 'export':
                 handleExport(); // TODO: handle error
                 break;
+            case 'unitList':
+                handleUnitList();
+                break;
             default:
                 console.warn('unhandled tool bar icon click: ', { type });
                 break;
@@ -559,12 +640,47 @@ const EditGraphView: React.FC = () => {
         return ['', 'state-task-arc'];
     }
 
+    const handleUnitAdd = () => {
+        addEmptyUnit();
+    };
+
+    const handleUnitDelete = (unitId: string | undefined) => {
+        if (unitId !== undefined)
+            deleteUnit(unitId);
+    };
+
+    const handleUnitUpdate = (unitId: string | undefined, key: keyof IUnitTableRowData | IUnitModel, val?: unknown) => {
+        if (unitId === undefined)
+            return;
+
+        if (typeof key === 'string')
+            updateUnit(unitId, key, val);
+        else
+            updateUnitObj(unitId, key);
+    };
+
     return (
         <>
             <ImportModal
                 isDisplay={isImportModalDisplay}
                 onCancel={() => setIsImportModalDisplay(false)}
-                onOk={(content) => { importJSON(graph, content) || message.error('导入失败'); setIsImportModalDisplay(false); }}
+                onOk={(content) => {
+                    if (importJSON(graph, content))
+                        setUnits(unitsReadOnlyCopy);
+                    else
+                        message.error('导入失败');
+                    setIsImportModalDisplay(false);
+                }}
+            />
+
+            <UnitListModal
+                isDisplay={isUnitListModalDisplay}
+                onCancel={() => setIsUnitListModalDisplay(false)}
+                onOk={() => setIsUnitListModalDisplay(false)}
+                units={units}
+                onUnitAdd={handleUnitAdd}
+                onUnitDelete={handleUnitDelete}
+                onUnitUpdate={handleUnitUpdate}
             />
 
             <Layout style={{ minHeight: '100vh', maxHeight: '100vh', overflow: 'hidden' }}>
