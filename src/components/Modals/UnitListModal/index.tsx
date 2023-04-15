@@ -108,7 +108,14 @@ const UnitListModal: React.FC<IUnitListModal> = ({
     };
 
     const columns: ColumnsType<IData> = [
-        { title: '设备ID', dataIndex: 'id', key: 'id', editable: false, align: 'center', width: 200 },
+        { title: '设备ID', dataIndex: 'id', key: 'id', editable: false, align: 'center', width: 200, 
+            render: (_: unknown, record: IData) => {
+                const id = record.id?.split(': ');
+                if (id !== undefined && !isNaN(parseInt(id[1])))
+                    return <span>{id[1]}</span>;
+                return <span>{id}</span>;
+            },
+        },
         { title: '设备名称', dataIndex: 'name', key: 'name', editable: true, align: 'center', width: 250},
         { title: '最小输入', dataIndex: 'minInput', key: 'minInput', editable: true, align: 'center', width: 100 },
         { title: '最大输入', dataIndex: 'maxInput', key: 'maxInput', editable: true, align: 'center', width: 100 },

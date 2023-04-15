@@ -33,7 +33,7 @@ const CanvasPanel: React.FC<ICanvasPanelProps> = ({
     const ref = React.useRef<HTMLDivElement>();
 
     const resizeCallback = () => {
-        console.log('resize');
+        // console.log('resize');
         if (graph && ref.current)
             graph.changeSize(ref.current.offsetWidth, ref.current.offsetHeight); // ref.current is set in useEffect
     };

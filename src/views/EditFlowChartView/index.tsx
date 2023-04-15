@@ -382,6 +382,12 @@ const EditGraphView: React.FC = () => {
 
     const deleteUnit = (unitId: string) => {
         const copy = [...units].filter(val => val.id !== unitId);
+        const obj = taskNodes.find(val => val.unitId === unitId);
+        if (obj !== undefined)
+            obj.unitId = undefined;
+        if (selectedModel.id === obj?.id)
+            setSelectedModel({...obj});
+
         setUnitsState(copy);
     };
 
@@ -616,8 +622,8 @@ const EditGraphView: React.FC = () => {
             (copy as IStateNodeModel).price = toNumber(val);
         else if (key === 'rho' && (copy.clazz === 'state-task-arc' || copy.clazz === 'task-state-arc') && (typeof val === 'number' || typeof val === 'string'))
             (copy as IStateTaskArcModel).rho = toNumber(val);
-        else if (key === 'unitId' && copy.clazz === 'task-node' && (typeof val === 'number' || typeof val === 'string'))
-            (copy as ITaskNodeModel).unitId = toNumber(val);
+        else if (key === 'unitId' && copy.clazz === 'task-node' && typeof val === 'string')
+            (copy as ITaskNodeModel).unitId = val;
         else
             console.warn('unhandled detail change type: ', { key, val }, typeof val, copy);
 
@@ -705,7 +711,7 @@ const EditGraphView: React.FC = () => {
                         />
                     </Content>
                     <Sider width={300}>
-                        <DetailPanel model={selectedModel} units={[]} onChange={handleDetailChange} readonly={false} />
+                        <DetailPanel model={selectedModel} units={units} onChange={handleDetailChange} readonly={false} />
                     </Sider>
                 </Layout>
             </Layout>

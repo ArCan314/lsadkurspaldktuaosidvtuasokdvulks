@@ -12,7 +12,7 @@ export interface IDefaultModel {
 };
 
 export interface ITaskNodeModel extends IDefaultModel {
-    unitId?: number;
+    unitId?: string;
 };
 
 export interface IStateNodeModel extends IDefaultModel {

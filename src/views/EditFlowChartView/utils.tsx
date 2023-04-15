@@ -21,7 +21,11 @@ export const generateArcId = (fromId: string, toId: string) => {
 export const isSTArc = (id: string): boolean => id.startsWith('st-arc');
 export const isTSArc = (id: string): boolean => id.startsWith('ts-arc');
 
-export const isId = (id: string): boolean => isTaskNode(id) || isStateNode(id) || isSTArc(id) || isTSArc(id);
+export const isUnit = (id: string): boolean => id.startsWith('unit') && id.split(': ').length === 2 && !isNaN(parseInt(id.split(': ')[1]));
+
+export const isId = (id: string): boolean => isTaskNode(id) || isStateNode(id) || isSTArc(id) || isTSArc(id) || isUnit(id);
+
+export const generateUnitId = (unitNum: number): string => `unit: ${unitNum}`;
 
 export const validateImportedJSON = (obj: unknown): boolean => {
     if (typeof obj !== 'object')
