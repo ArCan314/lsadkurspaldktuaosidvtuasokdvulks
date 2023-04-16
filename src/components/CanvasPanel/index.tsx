@@ -1,8 +1,8 @@
-import { EdgeConfig, Graph, IEdge, IG6GraphEvent, Item, SnapLine } from "@antv/g6";
+import { Arrow, EdgeConfig, Graph, IEdge, IG6GraphEvent, Item, SnapLine } from "@antv/g6";
 import React, { useEffect } from "react";
 import "./CanvasPanel.module.css";
 import { addNode, modifyItemId } from "./utils";
-import { ModelClass } from "@/types";
+import { IDefaultModel, ModelClass } from "@/types";
 import { message } from "antd";
 import _ from "lodash";
 
@@ -10,13 +10,13 @@ export type CanvasSelectedType = 'node' | 'edge' | 'canvas';
 
 export interface ICanvasPanelProps {
     onItemClick: (type: CanvasSelectedType, id?: string) => void;
-    onNodeCreate: (type: ModelClass, x: number, y: number) => string;
+    onNodeCreate: (type: ModelClass, x: number, y: number) => Readonly<IDefaultModel> | undefined;
 
     graph: Graph | undefined;
     onGraphMount: (graph: Graph) => void;
 
     hasEdge: (fromId: string, toId: string) => boolean;
-    onEdgeCreate: (fromId: string, toId: string) => [string, ModelClass]; // return edge-id and edge-type
+    onEdgeCreate: (fromId: string, toId: string) => [IDefaultModel | undefined, ModelClass]; // return edge-id and edge-type
 };
 
 let createEdgeBeginNodeId: string = '';
@@ -46,19 +46,19 @@ const CanvasPanel: React.FC<ICanvasPanelProps> = ({
                 const dragEvent = e.originalEvent as DragEvent;
                 const shape = dragEvent.dataTransfer?.getData('shape');
                 if (shape) {
-                    let id: string | undefined;
+                    let node: IDefaultModel | undefined;
                     // console.log(e);
 
                     if (shape === 'task-node')
-                        id = handleNodeCreate('task-node', e.canvasX, e.canvasY);
+                        node = handleNodeCreate('task-node', e.canvasX, e.canvasY);
                     else if (shape === 'state-node')
-                        id = handleNodeCreate('state-node', e.canvasX, e.canvasY);
+                        node = handleNodeCreate('state-node', e.canvasX, e.canvasY);
 
-                    if (id)
+                    if (node)
                         if (shape === 'task-node')
-                            addNode(graph, e.x, e.y, 'task-node', id);
+                            addNode(graph, e.x, e.y, 'task-node', node);
                         else if (shape === 'state-node')
-                            addNode(graph, e.x, e.y, 'state-node', id);
+                            addNode(graph, e.x, e.y, 'state-node', node);
                 }
             }
         });
@@ -135,9 +135,10 @@ const CanvasPanel: React.FC<ICanvasPanelProps> = ({
                     style: {
                         stroke: '#F6BD16',
                         lineWidth: 2,
+                        endArrow: true,
                     },
                 },
-                linkCenter: true,
+                linkCenter: false,
                 minZoom: 0.2,
                 maxZoom: 5,
                 plugins: [snapLine],
@@ -152,15 +153,17 @@ const CanvasPanel: React.FC<ICanvasPanelProps> = ({
                     const edge = e.edge as IEdge;
 
                     const originId = edge.get('id');
-                    const [id, clazz] = handleEdgeCreate(createEdgeBeginNodeId, createEdgeEndNodeId);
+                    const [edgeObj, clazz] = handleEdgeCreate(createEdgeBeginNodeId, createEdgeEndNodeId);
+                    if (edgeObj === undefined || edgeObj.id === undefined)
+                        return;
+
                     if (edge._cfg)
-                        edge._cfg.id = id;
+                        edge._cfg.id = edgeObj.id;
 
-                    modifyItemId(graph, originId, id); // TODO: handle error
+                    modifyItemId(graph, originId, edgeObj.id); // TODO: handle error
 
-                    graph.updateItem(edge, { clazz, label: id });
+                    graph.updateItem(edge, { clazz, label: edgeObj.label });
                 }
-
             });
 
             initEvent(graph);

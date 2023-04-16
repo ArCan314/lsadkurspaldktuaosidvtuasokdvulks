@@ -1,4 +1,4 @@
-import { ModelClass } from "@/types";
+import { IDefaultModel, ModelClass } from "@/types";
 import { Graph, IG6GraphEvent } from "@antv/g6";
 
 export function getType(shape: ModelClass) {
@@ -17,19 +17,22 @@ function getLabel(shape: ModelClass) {
     return '';
 }
 
-export const addNode = (graph: Graph | undefined, x: number | undefined, y: number | undefined, shape: ModelClass, id: string, xBias?: number, yBias?: number) => {
-    if (graph === undefined)
+export const addNode = (graph: Graph | undefined, x: number | undefined, y: number | undefined, shape: ModelClass, node: IDefaultModel, xBias?: number, yBias?: number) => {
+    if (graph === undefined || node.id === undefined)
         return false;
     
     x = x ?? graph?.getGraphCenterPoint().x ?? 0;
     y = y ?? graph?.getGraphCenterPoint().y ?? 0;
 
+    let anchorPoints: [number, number][] = [[0.5, 0], [0, 0.5], [1, 0.5], [0.5, 1]];
+
+    console.log({anchorPoints});
     graph.addItem('node', {
         x: x + (xBias ? xBias : 0),
         y: y + (yBias ? yBias : 0),
-        anchorPoints: [[0.5, 0], [0, 0.5], [1, 0.5], [0.5, 1]],
-        id,
-        label: `${getLabel(shape)}-${id.split(':')[1]}`,
+        anchorPoints: anchorPoints,
+        id: node.id,
+        label: node.label,
         size: shape === "state-node" ? 70 : [80, 50],
         type: getType(shape),
     });

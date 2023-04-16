@@ -27,6 +27,7 @@ const TaskNodeDetail: React.FC<TaskNodeProps> = ({ model, units, onChange: handl
                 <div className={styles.panelRow}>
                     <div>节点名称: </div>
                     <Input style={{ width: '100%', fontSize: 12 }}
+                        placeholder="输入节点名称"
                         value={model.name}
                         onChange={e => handleChange('name', e.target.value)}
                         disabled={readOnly}

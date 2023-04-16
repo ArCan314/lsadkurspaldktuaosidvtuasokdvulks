@@ -11,7 +11,7 @@ import { ToolBarIconType } from '@/components/ToolBarPanel/data';
 import { Graph } from '@antv/g6';
 import { addNode } from '@/components/CanvasPanel/utils';
 import _ from 'lodash';
-import { generateArcId, isStateNode, isTaskNode, toNumber, validateImportedJSON } from './utils';
+import { generateArcId, generateArcLabel, isStateNode, isTaskNode, toNumber, validateImportedJSON } from './utils';
 import ImportModal from '@/components/Modals/ImportModal';
 import Router from 'next/router';
 import UnitListModal, { IUnitTableRowData } from '@/components/Modals/UnitListModal';
@@ -32,14 +32,37 @@ let taskNodeCount = 0;
 const stateNodes: IStateNodeModel[] = [];
 let stateNodeCount = 0;
 
-function updateNode(node: IDefaultModel) {
+function updateNode(node: IDefaultModel, graph: Graph | undefined) {
     if (node.clazz !== 'state-node' && node.clazz !== 'task-node')
         return;
 
     const arr = node.clazz === 'state-node' ? stateNodes : taskNodes;
     const ind = arr.findIndex(val => val.id === node.id);
-    if (ind !== -1)
+    if (ind !== -1) {
+        let newLabel = '';
+        if (node.clazz === 'task-node') {
+            const labelTask = node.name ? node.name : `任务节点-${node.id?.split(': ')[1]}`;
+            let labelUnit = '\n(无设备)';
+            if (node.unitId && unitsReadOnlyCopy.find(val => val.id === node.unitId)) {
+                const unit = unitsReadOnlyCopy.find(val => val.id === node.unitId)!;
+                if (unit.name)
+                    labelUnit = `\n(${unit.name})`;
+                else
+                    labelUnit = `\n(id:${unit.id?.split(': ')[1]})`;
+            }
+            newLabel = labelTask + labelUnit;
+        }
+        else if (node.clazz === 'state-node') {
+            newLabel = node.name ? node.name : `状态节点-${node.id?.split(': ')[1]}`;
+        }
+        const originLabel = arr[ind].label;
+        
+        if (originLabel !== newLabel) {
+            node.label = newLabel;
+            updateGraphLabel(graph, node.id!, node.label!);
+        }
         arr[ind] = _.clone(node);
+    }
 }
 
 function findNodeById(id: string) {
@@ -71,13 +94,13 @@ function createTaskNode(x: number, y: number) {
         id: `task-node: ${taskNodeCount}`,
         active: true,
         clazz: 'task-node',
-        label: `任务节点-${taskNodeCount}`,
+        label: `任务节点-${taskNodeCount}\n(无设备)`,
         x,
         y,
     };
     taskNodeCount++;
     taskNodes.push(data);
-    return data.id as string;
+    return data;
 };
 
 function createStateNode(x: number, y: number) {
@@ -91,7 +114,7 @@ function createStateNode(x: number, y: number) {
     };
     stateNodeCount++;
     stateNodes.push(data);
-    return data.id as string;
+    return data;
 };
 
 function removeNode(node: IDefaultModel, graph: Graph | undefined): boolean {
@@ -114,14 +137,20 @@ function removeNode(node: IDefaultModel, graph: Graph | undefined): boolean {
 const tsArcs: ITaskStateArcModel[] = [];
 const stArcs: IStateTaskArcModel[] = [];
 
-function updateEdge(edge: IDefaultModel) {
+function updateEdge(edge: IDefaultModel, graph: Graph | undefined) {
     if (edge.clazz !== 'state-task-arc' && edge.clazz !== 'task-state-arc')
         return;
 
     const arr = edge.clazz === 'state-task-arc' ? stArcs : tsArcs;
     const ind = arr.findIndex(val => val.id === edge.id);
-    if (ind !== -1)
+    if (ind !== -1) {
+        const originLabel = arr[ind].label;
+        edge.label = generateArcLabel(edge);
+        if (edge.label !== originLabel)
+            updateGraphLabel(graph, edge.id!, edge.label!);
+
         arr[ind] = _.clone(edge);
+    }
 }
 
 function hasEdge(fromId: string, toId: string): boolean {
@@ -177,10 +206,10 @@ function removeConnectedEdge(node: IDefaultModel, graph: Graph | undefined): boo
     return true;
 }
 
-function createArc(fromId: string, toId: string): string {
+function createArc(fromId: string, toId: string): IDefaultModel | undefined {
     const isFromTaskNode = isTaskNode(fromId), isToTaskNode = isTaskNode(toId);
     if ((isFromTaskNode && isToTaskNode) || (!isFromTaskNode && !isToTaskNode))
-        return '';
+        return undefined;
 
     let arr = isFromTaskNode ? tsArcs : stArcs;
     const clazz: ModelClass = isFromTaskNode ? 'task-state-arc' : 'state-task-arc';
@@ -188,25 +217,28 @@ function createArc(fromId: string, toId: string): string {
     arr.push({
         id: generateArcId(fromId, toId),
         active: true,
-        label: generateArcId(fromId, toId),
+        label: '0%',
         clazz,
         fromId: fromId,
         toId: toId,
     });
-
+    const arc = arr[arr.length - 1];
     if (clazz === 'state-task-arc') {
-        const arc = arr[arr.length - 1];
         arc.rho = 0;
     }
     else { // clazz === 'task-state-arc'
-        const arc = arr[arr.length - 1];
         arc.rho = 0;
-        (arc as ITaskStateArcModel).duration = 0;
+        (arc as ITaskStateArcModel).duration = 1;
     }
-    return arr[arr.length - 1].id!;
+
+    arc.label = generateArcLabel(arc);
+    return arr[arr.length - 1];
 }
 
-function updateGraphLabel(graph: Graph, id: string, label: string): boolean {
+function updateGraphLabel(graph: Graph | undefined, id: string, label: string): boolean {
+    if (graph === undefined)
+        return false;
+
     const item = graph.findById(id);
     if (item.getType() !== 'node' && item.getType() !== 'edge')
         return false;
@@ -382,11 +414,13 @@ const EditGraphView: React.FC = () => {
 
     const deleteUnit = (unitId: string) => {
         const copy = [...units].filter(val => val.id !== unitId);
-        const obj = taskNodes.find(val => val.unitId === unitId);
-        if (obj !== undefined)
-            obj.unitId = undefined;
-        if (selectedModel.id === obj?.id)
-            setSelectedModel({...obj});
+        const nodes = taskNodes.filter(val => val.unitId === unitId);
+        nodes.map(val => val.unitId = undefined);
+        nodes.map(val => updateNode(val, graph));
+
+        const obj = nodes.find(val => val.id === selectedModel.id);
+        if (obj)
+            setSelectedModel({ ...obj });
 
         setUnitsState(copy);
     };
@@ -421,6 +455,11 @@ const EditGraphView: React.FC = () => {
         }
         unit[key] = val;
         setUnitsState(copy);
+
+        if (key === 'name') {
+            const nodes = taskNodes.filter(val => val.unitId === unitId);
+            nodes.map(node => updateNode(node, graph));
+        }
     };
 
     const updateUnitObj = (unitId: string, obj: IUnitModel) => {
@@ -429,8 +468,13 @@ const EditGraphView: React.FC = () => {
         if (ind === -1)
             return;
 
+        const originalName = copy[ind].name;
         copy[ind] = { ...copy[ind], ...obj };
         setUnitsState(copy);
+        if (originalName !== obj.name) {
+            const nodes = taskNodes.filter(val => val.unitId === unitId);
+            nodes.map(node => updateNode(node, graph));
+        }
     };
 
     const handleMenuClick = (ind: number) => {
@@ -464,7 +508,7 @@ const EditGraphView: React.FC = () => {
             return createTaskNode(x, y);
         if (type === 'state-node')
             return createStateNode(x, y);
-        return "";
+        return undefined;
     };
 
     const handleExport = () => {
@@ -611,7 +655,7 @@ const EditGraphView: React.FC = () => {
             (copy as IStateNodeModel).initial = toNumber(val);
         else if (key === 'label' && typeof val === 'string') {
             if (graph && copy.id !== undefined)
-                updateGraphLabel(graph, copy.id, val); // TODO: handle error
+                updateGraphLabel(graph, copy.id, val);
             else
                 console.error(`graph is undefined or copy.id === undefined ${{ graph, copy }}`);
             copy.label = val;
@@ -628,22 +672,22 @@ const EditGraphView: React.FC = () => {
             console.warn('unhandled detail change type: ', { key, val }, typeof val, copy);
 
         if (copy.clazz === 'state-node' || copy.clazz === 'task-node')
-            updateNode(copy);
+            updateNode(copy, graph);
         else if (copy.clazz === 'state-task-arc' || copy.clazz === 'task-state-arc') {
-            updateEdge(copy);
+            updateEdge(copy, graph);
         }
 
         setSelectedModel(copy);
     };
 
-    const handleEdgeCreate = (fromId: string, toId: string): [string, ModelClass] => {
+    const handleEdgeCreate = (fromId: string, toId: string): [IDefaultModel | undefined, ModelClass] => {
         if (isTaskNode(fromId) && isStateNode(toId))
             return [createArc(fromId, toId), 'task-state-arc'];
         else if (isStateNode(fromId) && isTaskNode(toId))
             return [createArc(fromId, toId), 'state-task-arc'];
         else
             console.log('unhandled edge create ', fromId, toId);
-        return ['', 'state-task-arc'];
+        return [undefined, 'state-task-arc'];
     }
 
     const handleUnitAdd = () => {

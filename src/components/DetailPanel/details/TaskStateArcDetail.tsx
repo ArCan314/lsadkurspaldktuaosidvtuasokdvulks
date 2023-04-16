@@ -19,6 +19,7 @@ const TaskStateArcDetail: React.FC<TaskStateArcDetail> = ({ model, onChange: han
                 <div className={styles.panelRow}>
                     <div>百分比: </div>
                     <InputNumber style={{ width: '100%', fontSize: 12 }}
+                        placeholder="输入百分比"
                         value={model.rho}
                         max={100}
                         min={0}
@@ -31,6 +32,7 @@ const TaskStateArcDetail: React.FC<TaskStateArcDetail> = ({ model, onChange: han
                 <div className={styles.panelRow}>
                     <div>耗时: </div>
                     <InputNumber style={{ width: '100%', fontSize: 12 }}
+                        placeholder="输入耗时"
                         value={model.duration}
                         min={0}
                         onChange={val => handleChange('duration', val)}

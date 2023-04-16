@@ -19,6 +19,7 @@ const StateNodeDetail: React.FC<StateNodeProps> = ({ model, onChange: handleChan
                 <div className={styles.panelRow}>
                     <div>节点名称: </div>
                     <Input style={{ width: '100%', fontSize: 12 }}
+                        placeholder="输入节点名称"
                         value={model.name}
                         onChange={e => handleChange('name', e.target.value)}
                         disabled={readOnly}
@@ -27,6 +28,7 @@ const StateNodeDetail: React.FC<StateNodeProps> = ({ model, onChange: handleChan
                 <div className={styles.panelRow}>
                     <div>状态容量: </div>
                     <InputNumber style={{ width: '100%', fontSize: 12 }}
+                        placeholder="输入状态容量"
                         min={0}
                         value={model.capacity}
                         onChange={val => handleChange('capacity', val)}
@@ -36,6 +38,7 @@ const StateNodeDetail: React.FC<StateNodeProps> = ({ model, onChange: handleChan
                 <div className={styles.panelRow}>
                     <div>初始量: </div>
                     <InputNumber style={{ width: '100%', fontSize: 12 }}
+                        placeholder="输入初始量"
                         min={0}
                         value={model.initial}
                         onChange={val => handleChange('initial', val)}
@@ -45,6 +48,7 @@ const StateNodeDetail: React.FC<StateNodeProps> = ({ model, onChange: handleChan
                 <div className={styles.panelRow}>
                     <div>价格: </div>
                     <InputNumber style={{ width: '100%', fontSize: 12 }}
+                        placeholder="输入价格"
                         min={0}
                         value={model.price}
                         onChange={val => handleChange('price', val)}

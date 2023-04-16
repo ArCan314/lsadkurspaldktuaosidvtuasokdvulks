@@ -14,10 +14,11 @@ const DefaultDetail: React.FC<DefaultProps> = ({ model, onChange: handleChange, 
         <>
             <div className={styles.panelRow}>
                 <div>标签: </div>
-                <Input style={{ width: '100%', fontSize: 12 }}
+                <Input
+                    style={{ width: '100%', fontSize: 12 }}
                     value={model.label}
-                    onChange={e => handleChange('label', e.target.value)}
-                    disabled={readOnly}
+                    // onChange={e => handleChange('label', e.target.value)}
+                    disabled={false}
                 />
             </div>
             {/* <div className={styles.panelRow}>

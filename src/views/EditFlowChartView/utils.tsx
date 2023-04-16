@@ -1,4 +1,4 @@
-import { ModelClass } from "@/types";
+import { ModelClass, IDefaultModel, IStateTaskArcModel } from "@/types";
 
 export const toNumber = (num: number | string): number => {
     if (typeof num === 'string')
@@ -15,6 +15,14 @@ export const generateArcId = (fromId: string, toId: string) => {
         return `ts-arc:{ from: ${fromId}, to: ${toId}}`;
     else if (isStateNode(fromId) && isTaskNode(toId))
         return `st-arc:{ from: ${fromId}, to: ${toId}}`;
+    return '';
+}
+
+export const generateArcLabel = (edge: IDefaultModel) => {
+    if (edge.clazz === 'state-task-arc')
+        return `${(edge.rho ?? 0)}%`;
+    else if (edge.clazz === 'task-state-arc')
+        return `${(edge.rho ?? 0)}%, ${edge.duration ?? 0}hr`;
     return '';
 }
 
