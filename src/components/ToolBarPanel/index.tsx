@@ -47,10 +47,19 @@ const ToolBarPanel: React.FC<ToolBarPanelProps> = ({ onIconClick: handleIconClic
     return (
         <div className={styles.toolbar}>
             {toRender}
-            <Button
-                style={{ marginLeft: 'auto', marginRight: '30px' }}
-                onClick={() => handleIconClick('unitList')}>
-                设备列表</Button>
+            <div
+                style={{ marginLeft: 'auto' }}>
+                <Button
+                    style={{ marginRight: '30px' }}
+                    onClick={() => handleIconClick('saveManage')}>
+                    存档管理
+                </Button>
+                <Button
+                    style={{ marginRight: '30px' }}
+                    onClick={() => handleIconClick('unitList')}>
+                    设备列表
+                </Button>
+            </div>
         </div>
     );
 };

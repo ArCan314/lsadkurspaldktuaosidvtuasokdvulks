@@ -1,8 +1,13 @@
-import { IconDefinition, faCopy, faFileExport, faFileImport, faMagnifyingGlass, faMagnifyingGlassMinus, faMagnifyingGlassPlus, faMaximize, faPaste, faRotateLeft, faRotateRight, faTrash } from "@fortawesome/free-solid-svg-icons";
+import {
+    IconDefinition, faCopy, faFileExport, faFileImport,
+    faMagnifyingGlass, faMagnifyingGlassMinus, faMagnifyingGlassPlus, faMaximize,
+    faPaste, faRotateLeft, faRotateRight, faTrash
+} from "@fortawesome/free-solid-svg-icons";
 
-export type ToolBarIconType = 'undo' | 'redo' | 'copy' | 'paste' | 
-                              'delete' | 'zoomIn' | 'zoomOut' | 'resetZoom' | 
-                              'autoFit' | 'export' | 'import' | 'unitList';
+export type ToolBarIconType = 'undo' | 'redo' | 'copy' | 'paste' |
+    'delete' | 'zoomIn' | 'zoomOut' | 'resetZoom' |
+    'autoFit' | 'export' | 'import' | 'unitList' |
+    'saveManage';
 
 export interface ToolBarItem {
     title: string;
@@ -73,6 +78,5 @@ export const toolBarData: ToolBarItem[][] = [
             type: "import",
             icon: faFileImport,
         },
-    ]
-
+    ],
 ];

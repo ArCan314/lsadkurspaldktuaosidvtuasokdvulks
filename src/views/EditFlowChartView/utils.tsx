@@ -1,4 +1,4 @@
-import { ModelClass, IDefaultModel, IStateTaskArcModel } from "@/types";
+import { ModelClass, IDefaultModel, IStateTaskArcModel, IUnitModel } from "@/types";
 
 export const toNumber = (num: number | string): number => {
     if (typeof num === 'string')
@@ -9,6 +9,26 @@ export const toNumber = (num: number | string): number => {
 
 export const isTaskNode = (id: string): boolean => id.startsWith('task-node');
 export const isStateNode = (id: string): boolean => id.startsWith('state-node');
+
+export const generateNodeLabel = (node: IDefaultModel, units: Readonly<IUnitModel[]>) => {
+    let label = '';
+    if (node.clazz === 'task-node') {
+        const labelTask = node.name ? node.name : `任务节点-${node.id?.split(': ')[1]}`;
+        let labelUnit = '\n(无设备)';
+        if (node.unitId && units.find(val => val.id === node.unitId)) {
+            const unit = units.find(val => val.id === node.unitId)!;
+            if (unit.name)
+                labelUnit = `\n(${unit.name})`;
+            else
+                labelUnit = `\n(id:${unit.id?.split(': ')[1]})`;
+        }
+        label = labelTask + labelUnit;
+    }
+    else if (node.clazz === 'state-node') {
+        label = node.name ? node.name : `状态节点-${node.id?.split(': ')[1]}`;
+    }
+    return label;
+}
 
 export const generateArcId = (fromId: string, toId: string) => {
     if (isTaskNode(fromId) && isStateNode(toId))

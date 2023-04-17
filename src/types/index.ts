@@ -1,3 +1,5 @@
+import { GraphData, TreeGraphData } from "@antv/g6";
+
 export type ModelClass = "task-node" | "state-node" | "task-state-arc" | "state-task-arc" | "units";
 
 export interface IDefaultModel {
@@ -43,3 +45,23 @@ export interface ITaskStateArcModel extends IDefaultModel {
 
 export type DetailKey = 'label' | 'hideIcon' | 'name' | 'capacity' | 
                         'initial' | 'price' | 'rho' | 'unitId' | 'duration';
+
+export interface ISaveFile {
+    slot: number,
+    saveTime: string,
+    content: string, // JSON.stringify(IExportFormat)
+};
+
+export interface IExportFormat {
+    taskNodes: ITaskNodeModel[],
+    stateNodes: IStateNodeModel[],
+    tsArcs: ITaskStateArcModel[],
+    stArcs: IStateTaskArcModel[],
+    taskNodeCount: number,
+    stateNodeCount: number,
+    graphData: GraphData | TreeGraphData,
+    unitCount: number,
+    units: IUnitModel[],
+};
+
+export const SAVE_FILE_KEY = 'save-files' as const;

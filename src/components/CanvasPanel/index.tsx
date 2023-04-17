@@ -5,6 +5,7 @@ import { addNode, modifyItemId } from "./utils";
 import { IDefaultModel, ModelClass } from "@/types";
 import { message } from "antd";
 import _ from "lodash";
+import { isId } from "@/views/EditFlowChartView/utils";
 
 export type CanvasSelectedType = 'node' | 'edge' | 'canvas';
 
@@ -17,6 +18,8 @@ export interface ICanvasPanelProps {
 
     hasEdge: (fromId: string, toId: string) => boolean;
     onEdgeCreate: (fromId: string, toId: string) => [IDefaultModel | undefined, ModelClass]; // return edge-id and edge-type
+
+    onNodePositionUpdate: (id: string, canvasX: number, canvasY: number) => void;
 };
 
 let createEdgeBeginNodeId: string = '';
@@ -28,6 +31,7 @@ const CanvasPanel: React.FC<ICanvasPanelProps> = ({
     graph,
     onGraphMount: handleGraphMount,
     onEdgeCreate: handleEdgeCreate,
+    onNodePositionUpdate: handleNodePositionUpdate,
     hasEdge }) => {
 
     const ref = React.useRef<HTMLDivElement>();
@@ -76,6 +80,22 @@ const CanvasPanel: React.FC<ICanvasPanelProps> = ({
             else
                 handleItemClick('canvas');
         });
+
+        graph.on('node:dragend', (e) => {
+            const id = e.item?.getID();
+            if (id === undefined || !isId(id))
+            {
+                console.warn('node:dragend unknown id ', id);
+                return;
+            }
+
+            handleNodePositionUpdate(id, e.canvasX, e.canvasY);
+        });
+        // graph.on('node:drag', (e) => console.log('node:drag'));
+        // graph.on('node:dragenter', (e) => console.log('node:dragenter'));
+        // graph.on('node:dragleave', (e) => console.log('node:dragleave'));
+        // graph.on('node:dragover', (e) => console.log('node:dragover'));
+        // graph.on('node:dragstart', (e) => console.log('node:dragstart'));
     };
 
     useEffect(() => {

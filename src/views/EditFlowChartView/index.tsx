@@ -5,16 +5,17 @@ import ToolBarPanel, { ToolBarPanelProps } from '@/components/ToolBarPanel';
 import ItemPanel from '@/components/ItemPanel';
 import CanvasPanel, { CanvasSelectedType } from '@/components/CanvasPanel';
 import DetailPanel from '@/components/DetailPanel';
-import { DetailKey, IDefaultModel, IStateNodeModel, IStateTaskArcModel, ITaskNodeModel, ITaskStateArcModel, IUnitModel, ModelClass } from '@/types';
+import { DetailKey, IDefaultModel, IExportFormat, ISaveFile, IStateNodeModel, IStateTaskArcModel, ITaskNodeModel, ITaskStateArcModel, IUnitModel, ModelClass, SAVE_FILE_KEY } from '@/types';
 import { defaultToolBarDisables } from './data';
 import { ToolBarIconType } from '@/components/ToolBarPanel/data';
 import { Graph } from '@antv/g6';
 import { addNode } from '@/components/CanvasPanel/utils';
 import _ from 'lodash';
-import { generateArcId, generateArcLabel, isStateNode, isTaskNode, toNumber, validateImportedJSON } from './utils';
+import { generateArcId, generateArcLabel, generateNodeLabel, isStateNode, isTaskNode, toNumber, validateImportedJSON } from './utils';
 import ImportModal from '@/components/Modals/ImportModal';
 import Router from 'next/router';
 import UnitListModal, { IUnitTableRowData } from '@/components/Modals/UnitListModal';
+import SaveManageModal from '@/components/Modals/SaveManageModal';
 
 export type ToolBarItemDisableAction = 'node-select' | 'edge-select' | 'item-delete' | 'redo' | 'undo' | 'canvas-select' | 'copy';
 
@@ -39,24 +40,9 @@ function updateNode(node: IDefaultModel, graph: Graph | undefined) {
     const arr = node.clazz === 'state-node' ? stateNodes : taskNodes;
     const ind = arr.findIndex(val => val.id === node.id);
     if (ind !== -1) {
-        let newLabel = '';
-        if (node.clazz === 'task-node') {
-            const labelTask = node.name ? node.name : `任务节点-${node.id?.split(': ')[1]}`;
-            let labelUnit = '\n(无设备)';
-            if (node.unitId && unitsReadOnlyCopy.find(val => val.id === node.unitId)) {
-                const unit = unitsReadOnlyCopy.find(val => val.id === node.unitId)!;
-                if (unit.name)
-                    labelUnit = `\n(${unit.name})`;
-                else
-                    labelUnit = `\n(id:${unit.id?.split(': ')[1]})`;
-            }
-            newLabel = labelTask + labelUnit;
-        }
-        else if (node.clazz === 'state-node') {
-            newLabel = node.name ? node.name : `状态节点-${node.id?.split(': ')[1]}`;
-        }
+        let newLabel = generateNodeLabel(node, unitsReadOnlyCopy);
         const originLabel = arr[ind].label;
-        
+
         if (originLabel !== newLabel) {
             node.label = newLabel;
             updateGraphLabel(graph, node.id!, node.label!);
@@ -82,11 +68,12 @@ function createNodeFrom(node: IDefaultModel, xBias?: number, yBias?: number) {
     if (copy.y !== undefined && yBias !== undefined)
         copy.y += yBias;
 
+    copy.label = generateNodeLabel(copy, unitsReadOnlyCopy);
     if (node.clazz === 'state-node')
         stateNodes.push(copy);
     else
         taskNodes.push(copy);
-    return copy.id;
+    return copy;
 };
 
 function createTaskNode(x: number, y: number) {
@@ -132,6 +119,15 @@ function removeNode(node: IDefaultModel, graph: Graph | undefined): boolean {
         return true;
     }
     return false;
+}
+
+function updateNodePosition(id: string, canvasX: number, canvasY: number) {
+    const obj = findNodeById(id);
+    if (obj === undefined)
+        return;
+
+    obj.x = canvasX;
+    obj.y = canvasY;
 }
 
 const tsArcs: ITaskStateArcModel[] = [];
@@ -254,7 +250,7 @@ function generateExportJSON(graph: Graph | undefined): string {
     if (graph === undefined)
         return '';
 
-    const obj = {
+    const obj: IExportFormat = {
         taskNodes,
         stateNodes,
         tsArcs,
@@ -285,7 +281,7 @@ function importJSON(graph: Graph | undefined, content: string): boolean {
     // not implemented
     if (graph === undefined)
         return false;
-    let obj;
+    let obj: IExportFormat;
     try {
         obj = JSON.parse(content);
     } catch (objError) {
@@ -369,34 +365,128 @@ let graph: Graph | undefined;
 Router.events.on('routeChangeStart', (...args) => {
     if (args[0] === '/optimization') {
         // console.log('out: /');
-        localStorage.setItem('graph', generateExportJSON(graph));
+        // console.log('save on router away');
+        handleSaveModalSave(0, (val) => saveFiles = val);
     }
 });
 
-Router.events.on('routeChangeComplete', (...args) => {
-    if (args[0] === '/') {
-        // console.log('in: /');
-        const graphData = localStorage.getItem('graph');
-        if (graphData !== null)
-            importJSON(graph, graphData);
-    }
-});
+// Router.events.on('routeChangeComplete', (...args) => {
+//     if (args[0] === '/') {
+//         // console.log('in: /');
+//         const loaded = loadSaveFiles();
+//         const autosave = loaded.find(val => val.slot === 0);
+//         console.log("router back", { autosave });
+//         if (autosave)
+//             importJSON(graph, autosave.content);
+//     }
+// });
 
 let unitsReadOnlyCopy: IUnitModel[] = [];
 let unitCount = 0;
 
+const loadSaveFiles = (): ISaveFile[] => {
+    const saveFiles = localStorage.getItem(SAVE_FILE_KEY);
+    if (saveFiles === null)
+        return [];
+    try {
+        return JSON.parse(saveFiles);
+    }
+    catch (exception) {
+        console.error(exception);
+        return [];
+    }
+};
+
+const saveSaveFiles = (saveFiles: ISaveFile[]) => {
+    localStorage.setItem(SAVE_FILE_KEY, JSON.stringify(saveFiles)); // TODO: handle error
+}
+
+let saveFiles: ISaveFile[] = [];
+
+const handleSaveModalSave = (slot: number | undefined, setSaveFiles: (val: ISaveFile[]) => void) => {
+    const copy = [...saveFiles];
+
+    if (slot === undefined) {
+        let nextSlot;
+        if (copy.length === 0)
+            nextSlot = 1;
+        else
+            nextSlot = copy[copy.length - 1].slot + 1;
+
+        copy.push({
+            slot: nextSlot,
+            saveTime: new Date().toLocaleString(),
+            content: generateExportJSON(graph),
+        });
+
+        // console.log('append', { raw: [...saveFiles], slot, copy });
+        saveSaveFiles(copy);
+        setSaveFiles(copy);
+        return;
+    }
+    if (slot < 0)
+        return;
+
+    const ind = copy.findIndex(val => val.slot === slot);
+    if (ind === -1) {
+        copy.push({
+            slot: slot,
+            saveTime: new Date().toLocaleString(),
+            content: generateExportJSON(graph),
+        });
+        copy.sort((a, b) => a.slot - b.slot);
+
+        // console.log('insert', { raw: [...saveFiles], slot, copy });
+        saveSaveFiles(copy);
+        setSaveFiles(copy);
+        return;
+    }
+    else { // overwrite
+        copy[ind] = {
+            slot: slot,
+            saveTime: new Date().toLocaleString(),
+            content: generateExportJSON(graph),
+        };
+        // console.log('overwrite', { raw: [...saveFiles], slot, copy });
+        saveSaveFiles(copy);
+        setSaveFiles(copy);
+        return;
+    }
+};
+
 const EditGraphView: React.FC = () => {
     const { token: { colorBgContainer } } = theme.useToken();
-    const [selectedModel, setSelectedModel] = useState<IDefaultModel>({});
+    const [selectedModel, setSelectedModel] = useState<Readonly<IDefaultModel>>({});
     const [toolbarItemDisables, setToolBarItemDisables] = useState<ToolBarPanelProps['isIconDisabled']>(defaultToolBarDisables);
     const [isImportModalDisplay, setIsImportModalDisplay] = useState<boolean>(false);
     const [isUnitListModalDisplay, setIsUnitListModalDisplay] = useState<boolean>(false);
     const [graphState, setGraphState] = useState<Graph>();
     const [units, setUnits] = useState<IUnitModel[]>([{ id: 'test', name: 'test', minInput: 0, maxInput: undefined, startUpCost: 100, executeCost: 100 }]);
+    const [isSaveManageModalDisplay, setIsSaveManageModalDisplay] = useState<boolean>(false);
+    const [saveFilesReadonly, setSaveFilesReadonly] = useState<Readonly<ISaveFile[]>>([]);
 
+    const setSaveFiles = (val: ISaveFile[]) => {
+        saveFiles = val;
+        setSaveFilesReadonly(val);
+    }
 
     useEffect(() => {
         setUnits(unitsReadOnlyCopy);
+        const loaded = loadSaveFiles();
+        setSaveFiles(loaded);
+
+        const autoSaveObj = saveFiles.find(val => val.slot === 0);
+        // console.log({ saveFiles, autoSaveObj });
+
+        if (autoSaveObj && generateExportJSON(graph) !== autoSaveObj.content) {
+            importJSON(graph, autoSaveObj.content) && message.info('已载入自动保存的存档');
+        }
+
+        const intervalId = setInterval(() => {
+            handleSaveModalSave(0, setSaveFiles);
+        }, 5000);
+
+        return () => clearInterval(intervalId);
     }, [])
 
     const setUnitsState = (units: IUnitModel[]) => {
@@ -523,6 +613,10 @@ const EditGraphView: React.FC = () => {
         setIsUnitListModalDisplay(true);
     };
 
+    const handleSaveManage = () => {
+        setIsSaveManageModalDisplay(true);
+    };
+
     const handleToolBarIconClick = (type: ToolBarIconType) => {
         switch (type) {
             case 'undo':
@@ -542,10 +636,10 @@ const EditGraphView: React.FC = () => {
                 break;
             case 'paste':
                 if (copyBuffer.clazz === 'state-node' || copyBuffer.clazz === 'task-node') {
-                    const id = createNodeFrom(copyBuffer, 20, 20);
-                    console.log(id);
-                    if (id)
-                        addNode(graph, copyBuffer.x!, copyBuffer.y!, copyBuffer.clazz, id, 20, 20);
+                    const node = createNodeFrom(copyBuffer, 20, 20);
+                    console.log(node);
+                    if (node)
+                        addNode(graph, node.x!, node.y!, node.clazz!, node);
                 }
                 else
                     console.warn('unsupported operation paste for item ', _.cloneDeep(selectedModel));
@@ -629,6 +723,9 @@ const EditGraphView: React.FC = () => {
             case 'unitList':
                 handleUnitList();
                 break;
+            case 'saveManage':
+                handleSaveManage();
+                break;
             default:
                 console.warn('unhandled tool bar icon click: ', { type });
                 break;
@@ -643,7 +740,7 @@ const EditGraphView: React.FC = () => {
     };
 
     const handleDetailChange = (key: DetailKey, val: any) => {
-        const copy = _.clone(selectedModel);
+        const copy: IDefaultModel = _.clone(selectedModel);
 
         if (key === 'capacity' && copy.clazz === 'state-node' && (typeof val === 'number' || typeof val === 'string'))
             (copy as IStateNodeModel).capacity = toNumber(val);
@@ -709,6 +806,19 @@ const EditGraphView: React.FC = () => {
             updateUnitObj(unitId, key);
     };
 
+    const handleSaveModalLoad = (slot: number) => {
+        const obj = saveFiles.find(val => val.slot === slot);
+        if (obj !== undefined) {
+            importJSON(graph, obj.content); // TODO: handle error
+        }
+    };
+
+    const handleSaveModalDelete = (slot: number) => {
+        const copy = [...saveFiles].filter(val => val.slot !== slot);
+        saveSaveFiles(copy); // TODO: handle exception
+        setSaveFiles(copy);
+    };
+
     return (
         <>
             <ImportModal
@@ -733,6 +843,16 @@ const EditGraphView: React.FC = () => {
                 onUnitUpdate={handleUnitUpdate}
             />
 
+            <SaveManageModal
+                isDisplay={isSaveManageModalDisplay}
+                onCancel={() => setIsSaveManageModalDisplay(false)}
+                onOk={() => setIsSaveManageModalDisplay(false)}
+                saveFiles={saveFilesReadonly}
+                onDelete={handleSaveModalDelete}
+                onLoad={handleSaveModalLoad}
+                onSave={(slot?: number) => handleSaveModalSave(slot, setSaveFiles)}
+            />
+
             <Layout style={{ minHeight: '100vh', maxHeight: '100vh', overflow: 'hidden' }}>
                 <Header className="header">
                     <div className="logo" />
@@ -752,6 +872,7 @@ const EditGraphView: React.FC = () => {
                             graph={graphState}
                             onGraphMount={handleGraphMount}
                             onEdgeCreate={handleEdgeCreate}
+                            onNodePositionUpdate={updateNodePosition}
                         />
                     </Content>
                     <Sider width={300}>
