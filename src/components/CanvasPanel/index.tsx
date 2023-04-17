@@ -1,4 +1,4 @@
-import { Arrow, EdgeConfig, Graph, IEdge, IG6GraphEvent, Item, SnapLine } from "@antv/g6";
+import { Graph, IEdge, IG6GraphEvent, SnapLine } from "@antv/g6";
 import React, { useEffect } from "react";
 import "./CanvasPanel.module.css";
 import { addNode, modifyItemId } from "./utils";

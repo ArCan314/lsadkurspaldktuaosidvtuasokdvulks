@@ -487,7 +487,7 @@ const EditGraphView: React.FC = () => {
         }, 5000);
 
         return () => clearInterval(intervalId);
-    }, [])
+    }, []);
 
     const setUnitsState = (units: IUnitModel[]) => {
         unitsReadOnlyCopy = units;

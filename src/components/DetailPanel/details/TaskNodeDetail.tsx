@@ -26,7 +26,8 @@ const TaskNodeDetail: React.FC<TaskNodeProps> = ({ model, units, onChange: handl
                 <DefaultDetail model={model} onChange={handleChange} readOnly={readOnly} />
                 <div className={styles.panelRow}>
                     <div>节点名称: </div>
-                    <Input style={{ width: '100%', fontSize: 12 }}
+                    <Input 
+                        style={{ width: '100%', fontSize: 12 }}
                         placeholder="输入节点名称"
                         value={model.name}
                         onChange={e => handleChange('name', e.target.value)}
@@ -35,7 +36,8 @@ const TaskNodeDetail: React.FC<TaskNodeProps> = ({ model, units, onChange: handl
                 </div>
                 <div className={styles.panelRow}>
                     <div>设备: </div>
-                    <Select style={{ width: '100%', fontSize: 12 }}
+                    <Select 
+                        style={{ width: '100%', fontSize: 12 }}
                         placeholder='选择设备'
                         options={options}
                         value={ model.unitId }

@@ -1,26 +1,31 @@
 import React from 'react';
-import { Table, App } from 'antd';
+import { Table, App, Typography } from 'antd';
 import _ from 'lodash';
 import type { ColumnsType } from 'antd/es/table';
 
 
-export interface ITableRowData {
-    taskID: string;
+export interface ITaskTableRowData {
+    taskID: number;
     commitTime: string;
-    status: string;
+    status: '进行中' | '失败' | '已完成' | '等待中' | '已取消';
     msg?: string;
 };
 
-interface IData extends ITableRowData {
+interface IData extends ITaskTableRowData {
     key: React.Key,
 };
 
 export interface IFlowOptimizationFlowTaskTableProps {
-    data: ITableRowData[] | undefined;
+    data: ITaskTableRowData[] | undefined;
+    onCancelTask: (id: number) => void;
 };
 
-const FlowOptimizationFlowTaskTable: React.FC<IFlowOptimizationFlowTaskTableProps> = ({ data }) => {
+const FlowOptimizationFlowTaskTable: React.FC<IFlowOptimizationFlowTaskTableProps> = ({ data, onCancelTask: handleCancelTask }) => {
     const { modal } = App.useApp();
+    let dataSource = data?.map((val, ind) => { (val as IData).key = ind; return val as IData; });
+
+    if (dataSource === undefined)
+        dataSource = [];
 
     const columns: ColumnsType<IData> = [
         {
@@ -56,7 +61,7 @@ const FlowOptimizationFlowTaskTable: React.FC<IFlowOptimizationFlowTaskTableProp
             render: (_, record) => {
                 if (record.status === '失败')
                     return <a onClick={() => modal.error({ title: '失败信息', content: record.msg })}>失败信息</a>;
-                else if (record.status === '完成')
+                else if (record.status === '已完成')
                     return <a>查看结果</a>;
             },
         },
@@ -65,8 +70,8 @@ const FlowOptimizationFlowTaskTable: React.FC<IFlowOptimizationFlowTaskTableProp
             key: 'action',
             align: 'center',
             render: (_, record) => {
-                if (record.status === '进行中' || record.status === '等待')
-                    return <a>取消</a>;
+                if (record.status === '进行中' || record.status === '等待中')
+                    return <Typography.Link onClick={() => handleCancelTask(record.taskID)}>取消</Typography.Link>;
             },
         }
     ];
@@ -74,7 +79,7 @@ const FlowOptimizationFlowTaskTable: React.FC<IFlowOptimizationFlowTaskTableProp
     return (
         <Table 
             columns={columns} 
-            dataSource={data?.map((val, ind) => { val.key = ind; return val; })} />
+            dataSource={dataSource} />
     );
 };
 
