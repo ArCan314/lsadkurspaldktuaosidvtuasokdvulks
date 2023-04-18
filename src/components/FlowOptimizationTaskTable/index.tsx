@@ -18,9 +18,13 @@ interface IData extends ITaskTableRowData {
 export interface IFlowOptimizationFlowTaskTableProps {
     data: ITaskTableRowData[] | undefined;
     onCancelTask: (id: number) => void;
+    onFlowShow: (id: number) => void;
 };
 
-const FlowOptimizationFlowTaskTable: React.FC<IFlowOptimizationFlowTaskTableProps> = ({ data, onCancelTask: handleCancelTask }) => {
+const FlowOptimizationFlowTaskTable: React.FC<IFlowOptimizationFlowTaskTableProps> = ({
+    data, 
+    onCancelTask: handleCancelTask,
+    onFlowShow: handleFlowShow }) => {
     const { modal } = App.useApp();
     let dataSource = data?.map((val, ind) => { (val as IData).key = ind; return val as IData; });
 
@@ -39,7 +43,7 @@ const FlowOptimizationFlowTaskTable: React.FC<IFlowOptimizationFlowTaskTableProp
             key: 'flow',
             align: 'center',
             render: (_, record) => {
-                return <a>查看流程</a>;
+                return <Typography.Link onClick={() => handleFlowShow(record.taskID)}>查看流程</Typography.Link>;
             },
         },
         {
@@ -62,7 +66,7 @@ const FlowOptimizationFlowTaskTable: React.FC<IFlowOptimizationFlowTaskTableProp
                 if (record.status === '失败')
                     return <a onClick={() => modal.error({ title: '失败信息', content: record.msg })}>失败信息</a>;
                 else if (record.status === '已完成')
-                    return <a>查看结果</a>;
+                    return <Typography.Link>查看结果</Typography.Link>;
             },
         },
         {
@@ -77,8 +81,8 @@ const FlowOptimizationFlowTaskTable: React.FC<IFlowOptimizationFlowTaskTableProp
     ];
 
     return (
-        <Table 
-            columns={columns} 
+        <Table
+            columns={columns}
             dataSource={dataSource} />
     );
 };
