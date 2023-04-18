@@ -1,7 +1,7 @@
 import React from "react";
 import styles from "../DetailPanel.module.less";
-import { Input, InputNumber } from "antd";
-import { DetailKey, IStateTaskArcModel } from '@/types';
+import { InputNumber } from "antd";
+import type { DetailKey, IStateTaskArcModel } from '@/types';
 import DefaultDetail from "./DefaultDetail";
 
 export interface StateTaskArcDetail {

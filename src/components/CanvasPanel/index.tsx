@@ -2,7 +2,7 @@ import { Graph, IEdge, IG6GraphEvent, SnapLine } from "@antv/g6";
 import React, { useEffect } from "react";
 import "./CanvasPanel.module.css";
 import { addNode, modifyItemId } from "./utils";
-import { IDefaultModel, ModelClass } from "@/types";
+import type { IDefaultModel, ModelClass } from "@/types";
 import { message } from "antd";
 import _ from "lodash";
 import { isId } from "@/views/EditFlowChartView/utils";
@@ -83,8 +83,7 @@ const CanvasPanel: React.FC<ICanvasPanelProps> = ({
 
         graph.on('node:dragend', (e) => {
             const id = e.item?.getID();
-            if (id === undefined || !isId(id))
-            {
+            if (id === undefined || !isId(id)) {
                 console.warn('node:dragend unknown id ', id);
                 return;
             }

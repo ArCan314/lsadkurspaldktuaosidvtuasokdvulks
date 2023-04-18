@@ -1,9 +1,10 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { ApiResponse } from '@/common/apis';
-import tasksOperation from '@/common/tasksApiData';
 import type { ITaskTableRowData } from '@/components/FlowOptimizationTaskTable';
+import type { NextApiRequest, NextApiResponse } from 'next';
+
+import tasksOperation from '@/common/tasksApiData';
 import _ from 'lodash';
-import type { NextApiRequest, NextApiResponse } from 'next'
 
 export default function handler(
     req: NextApiRequest,

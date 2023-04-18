@@ -33,7 +33,7 @@ export interface IUnitModel extends IDefaultModel {
 export interface IStateTaskArcModel extends IDefaultModel {
     rho?: number;
     fromId?: string;
-    toId?: string; 
+    toId?: string;
 };
 
 export interface ITaskStateArcModel extends IDefaultModel {
@@ -43,8 +43,8 @@ export interface ITaskStateArcModel extends IDefaultModel {
     toId?: string;
 };
 
-export type DetailKey = 'label' | 'hideIcon' | 'name' | 'capacity' | 
-                        'initial' | 'price' | 'rho' | 'unitId' | 'duration';
+export type DetailKey = 'label' | 'hideIcon' | 'name' | 'capacity' |
+    'initial' | 'price' | 'rho' | 'unitId' | 'duration';
 
 export interface ISaveFile {
     slot: number,
@@ -63,5 +63,3 @@ export interface IExportFormat {
     unitCount: number,
     units: IUnitModel[],
 };
-
-export const SAVE_FILE_KEY = 'save-files' as const;

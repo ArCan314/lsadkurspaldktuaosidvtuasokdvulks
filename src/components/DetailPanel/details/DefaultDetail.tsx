@@ -1,7 +1,7 @@
 import React from "react";
 import styles from "../DetailPanel.module.less";
-import { Checkbox, Input } from "antd";
-import { DetailKey, IDefaultModel } from '@/types';
+import { Input } from "antd";
+import type { DetailKey, IDefaultModel } from '@/types';
 
 export interface DefaultProps {
     model: IDefaultModel;

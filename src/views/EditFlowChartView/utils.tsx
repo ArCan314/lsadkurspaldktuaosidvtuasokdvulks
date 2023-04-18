@@ -1,4 +1,4 @@
-import { ModelClass, IDefaultModel, IStateTaskArcModel, IUnitModel } from "@/types";
+import type { IDefaultModel, IUnitModel } from "@/types";
 
 export const toNumber = (num: number | string): number => {
     if (typeof num === 'string')
@@ -64,10 +64,10 @@ export const validateImportedJSON = (obj: unknown): boolean => {
 
     // TODO: validate units
 
-    if (Object.keys(obj).length !== 9 || 
+    if (Object.keys(obj).length !== 9 ||
         !('taskNodes' in obj) || !('stateNodes' in obj) ||
-        !('tsArcs' in obj) || !('stArcs' in obj) || 
-        !('graphData' in obj) || !('taskNodeCount' in obj) || 
+        !('tsArcs' in obj) || !('stArcs' in obj) ||
+        !('graphData' in obj) || !('taskNodeCount' in obj) ||
         !('stateNodeCount' in obj) || !('unitCount' in obj) ||
         !('units' in obj))
         return false;

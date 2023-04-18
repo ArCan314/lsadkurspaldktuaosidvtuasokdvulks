@@ -1,5 +1,6 @@
-import { ITaskTableRowData } from "@/components/FlowOptimizationTaskTable";
-import { IExportFormat } from "@/types";
+import type { ITaskTableRowData } from "@/components/FlowOptimizationTaskTable";
+import type { IExportFormat } from "@/types";
+
 import axios from "axios";
 
 export interface ApiResponse<T = unknown> {

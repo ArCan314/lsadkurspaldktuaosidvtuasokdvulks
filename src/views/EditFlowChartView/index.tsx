@@ -5,9 +5,9 @@ import ToolBarPanel, { ToolBarPanelProps } from '@/components/ToolBarPanel';
 import ItemPanel from '@/components/ItemPanel';
 import CanvasPanel, { CanvasSelectedType } from '@/components/CanvasPanel';
 import DetailPanel from '@/components/DetailPanel';
-import { DetailKey, IDefaultModel, IExportFormat, ISaveFile, IStateNodeModel, IStateTaskArcModel, ITaskNodeModel, ITaskStateArcModel, IUnitModel, ModelClass, SAVE_FILE_KEY } from '@/types';
-import { defaultToolBarDisables } from './data';
-import { ToolBarIconType } from '@/components/ToolBarPanel/data';
+import type { DetailKey, IDefaultModel, IExportFormat, ISaveFile, IStateNodeModel, IStateTaskArcModel, ITaskNodeModel, ITaskStateArcModel, IUnitModel, ModelClass } from '@/types';
+import { SAVE_FILE_KEY, defaultToolBarDisables } from './data';
+import type { ToolBarIconType } from '@/components/ToolBarPanel/data';
 import { Graph } from '@antv/g6';
 import { addNode } from '@/components/CanvasPanel/utils';
 import _ from 'lodash';
@@ -541,7 +541,6 @@ const EditGraphView: React.FC = () => {
             default:
                 console.warn('unhandled unit update: ', { unitId, key, val });
                 return;
-                break;
         }
         unit[key] = val;
         setUnitsState(copy);

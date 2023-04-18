@@ -1,7 +1,7 @@
 import React from "react";
 import styles from "../DetailPanel.module.less";
-import { Checkbox, Input, Select } from "antd";
-import { ITaskNodeModel, IUnitModel, DetailKey } from '@/types';
+import { Input, Select } from "antd";
+import type { ITaskNodeModel, IUnitModel, DetailKey } from '@/types';
 import DefaultDetail from "./DefaultDetail";
 import _ from "lodash";
 import { isUnit } from "@/views/EditFlowChartView/utils";
@@ -16,8 +16,10 @@ export interface TaskNodeProps {
 const TaskNodeDetail: React.FC<TaskNodeProps> = ({ model, units, onChange: handleChange, readOnly = false, }) => {
     const options: { value: string, label: string }[] =
         units.filter(val => val.id !== undefined && isUnit(val.id))
-            .map(val => ({ value: val.id!,
-                           label: `${val.name ?? '设备'}-${val.id!.split(': ')[1]}` }));
+            .map(val => ({
+                value: val.id!,
+                label: `${val.name ?? '设备'}-${val.id!.split(': ')[1]}`
+            }));
 
     return (
         <div>
@@ -26,7 +28,7 @@ const TaskNodeDetail: React.FC<TaskNodeProps> = ({ model, units, onChange: handl
                 <DefaultDetail model={model} onChange={handleChange} readOnly={readOnly} />
                 <div className={styles.panelRow}>
                     <div>节点名称: </div>
-                    <Input 
+                    <Input
                         style={{ width: '100%', fontSize: 12 }}
                         placeholder="输入节点名称"
                         value={model.name}
@@ -36,11 +38,11 @@ const TaskNodeDetail: React.FC<TaskNodeProps> = ({ model, units, onChange: handl
                 </div>
                 <div className={styles.panelRow}>
                     <div>设备: </div>
-                    <Select 
+                    <Select
                         style={{ width: '100%', fontSize: 12 }}
                         placeholder='选择设备'
                         options={options}
-                        value={ model.unitId }
+                        value={model.unitId}
                         onChange={val => handleChange('unitId', val)}
                         disabled={readOnly}
                     />

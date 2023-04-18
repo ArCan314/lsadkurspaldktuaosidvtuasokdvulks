@@ -1,5 +1,5 @@
-import { IDefaultModel, ModelClass } from "@/types";
-import { Graph, IG6GraphEvent } from "@antv/g6";
+import type { IDefaultModel, ModelClass } from "@/types";
+import { Graph } from "@antv/g6";
 
 export function getType(shape: ModelClass) {
     if (shape === 'task-node')
@@ -20,13 +20,13 @@ function getLabel(shape: ModelClass) {
 export const addNode = (graph: Graph | undefined, x: number | undefined, y: number | undefined, shape: ModelClass, node: IDefaultModel, xBias?: number, yBias?: number) => {
     if (graph === undefined || node.id === undefined)
         return false;
-    
+
     x = x ?? graph?.getGraphCenterPoint().x ?? 0;
     y = y ?? graph?.getGraphCenterPoint().y ?? 0;
 
     let anchorPoints: [number, number][] = [[0.5, 0], [0, 0.5], [1, 0.5], [0.5, 1]];
 
-    console.log({anchorPoints});
+    console.log({ anchorPoints });
     graph.addItem('node', {
         x: x + (xBias ? xBias : 0),
         y: y + (yBias ? yBias : 0),

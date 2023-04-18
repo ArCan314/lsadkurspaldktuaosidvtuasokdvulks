@@ -1,4 +1,4 @@
-import { ITaskTableRowData } from "@/components/FlowOptimizationTaskTable";
+import type { ITaskTableRowData } from "@/components/FlowOptimizationTaskTable";
 import fs from 'fs';
 
 const tasks: (ITaskTableRowData & {content: string})[] = require('../../data/tasks.json');

@@ -1,7 +1,7 @@
 import React from "react";
 import styles from "../DetailPanel.module.less";
 import { Input, InputNumber } from "antd";
-import { DetailKey, IStateNodeModel } from '@/types';
+import type { DetailKey, IStateNodeModel } from '@/types';
 import DefaultDetail from "./DefaultDetail";
 
 export interface StateNodeProps {

@@ -1,7 +1,7 @@
 import React from 'react';
 import styles from "./DetailPanel.module.less";
 import { theme } from 'antd';
-import { DetailKey, IDefaultModel, IUnitModel } from '@/types';
+import type { DetailKey, IDefaultModel, IUnitModel } from '@/types';
 import StateNodeDetail from './details/StateNodeDetail';
 import TaskNodeDetail from './details/TaskNodeDetail';
 import StateTaskArcDetail from './details/StateTaskArcDetail';

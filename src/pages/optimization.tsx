@@ -7,7 +7,7 @@ export default function Home() {
             <Head>
                 <title>流程优化</title>
             </Head>
-            <OptimizationFlowView/>
+            <OptimizationFlowView />
         </div>
     )
 }

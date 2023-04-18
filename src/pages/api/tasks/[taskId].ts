@@ -1,9 +1,8 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { ApiResponse } from '@/common/apis';
-import tasksOperation from '@/common/tasksApiData';
 import type { NextApiRequest, NextApiResponse } from 'next';
 
-const fs = require('fs');
+import tasksOperation from '@/common/tasksApiData';
 
 export default function handler(
     req: NextApiRequest,

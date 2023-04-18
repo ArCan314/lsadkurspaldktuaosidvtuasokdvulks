@@ -9,7 +9,7 @@ import { HomeOutlined, PlusOutlined, RedoOutlined } from '@ant-design/icons';
 import Apis from '@/common/apis';
 import AddTaskModal from '@/components/Modals/AddTaskModal';
 import type { ItemType } from 'antd/es/breadcrumb/Breadcrumb';
-import { IExportFormat } from '@/types';
+import type { IExportFormat } from '@/types';
 import { Graph, SnapLine } from '@antv/g6';
 
 const { Header, Content } = Layout;
@@ -182,14 +182,14 @@ const EditGraphView: React.FC = () => {
 
                 <Content style={{ padding: '25px 50px', display: 'flex' }}>
                     <div style={{ padding: 24, minHeight: '100%', minWidth: '100%', background: colorBgContainer } as React.CSSProperties}>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', height: '4%' }}>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', height: 'max(30px, 4%)' }}>
                             <Breadcrumb items={breadcrumbItems} style={{ marginRight: 'auto', marginTop: '10px' }} />
                             {/* <div style={{ marginRight: 'auto' }}>流程优化任务表</div> */}
                             {
                                 breadcrumbItems.length === 2 && (
                                     <>
-                                        <Button style={{ margin: '0px 20px 10px 0px' }} onClick={() => setIsAddTaskModalDisplay(true)}><PlusOutlined />添加任务</Button>
-                                        <Button style={{ margin: '0px 20px 10px 0px' }} onClick={() => handleRefresh(true)}><RedoOutlined />刷   新</Button>
+                                        <Button style={{ margin: '0px 20px 20px 0px' }} onClick={() => setIsAddTaskModalDisplay(true)}><PlusOutlined />添加任务</Button>
+                                        <Button style={{ margin: '0px 20px 20px 0px' }} onClick={() => handleRefresh(true)}><RedoOutlined />刷   新</Button>
                                     </>
                                 )
                             }
@@ -206,7 +206,7 @@ const EditGraphView: React.FC = () => {
 
                         <div
                             id='graph-container'
-                            style={{ border: '1px gray', height: (breadcrumbItems.length === 3) ? '94%' : '100px' }} />
+                            style={{ height: (breadcrumbItems.length === 3) ? '94%' : '1px' }} />
                     </div>
                 </Content>
             </Layout>

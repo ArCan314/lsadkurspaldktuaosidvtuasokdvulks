@@ -3,7 +3,6 @@ import { Table, App, Typography } from 'antd';
 import _ from 'lodash';
 import type { ColumnsType } from 'antd/es/table';
 
-
 export interface ITaskTableRowData {
     taskID: number;
     commitTime: string;
@@ -22,7 +21,7 @@ export interface IFlowOptimizationFlowTaskTableProps {
 };
 
 const FlowOptimizationFlowTaskTable: React.FC<IFlowOptimizationFlowTaskTableProps> = ({
-    data, 
+    data,
     onCancelTask: handleCancelTask,
     onFlowShow: handleFlowShow }) => {
     const { modal } = App.useApp();
