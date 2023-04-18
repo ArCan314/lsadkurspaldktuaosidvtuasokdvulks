@@ -206,7 +206,7 @@ const EditGraphView: React.FC = () => {
 
                         <div
                             id='graph-container'
-                            style={{ height: (breadcrumbItems.length === 3) ? '94%' : '1px' }} />
+                            style={{ height: (breadcrumbItems.length === 3) ? '94%' : '0.01px' }} />
                     </div>
                 </Content>
             </Layout>

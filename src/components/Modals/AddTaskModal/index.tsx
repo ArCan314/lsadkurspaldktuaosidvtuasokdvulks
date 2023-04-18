@@ -1,4 +1,5 @@
-import { ISaveFile, SAVE_FILE_KEY } from "@/types";
+import type { ISaveFile } from "@/types";
+import { SAVE_FILE_KEY } from "@/views/EditFlowChartView/data";
 import { Modal, Input, Checkbox, Select, Space, Typography, message } from "antd";
 import React, { useState } from "react";
 

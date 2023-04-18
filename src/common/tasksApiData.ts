@@ -42,6 +42,7 @@ function createTask(commitTime: string, status: ITaskTableRowData['status'], con
         status
     });
     saveData();
+    return nextId;
 };
 
 function updateTaskStatus(id: number, status: ITaskTableRowData['status']) {

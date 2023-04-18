@@ -6,6 +6,29 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import tasksOperation from '@/common/tasksApiData';
 import _ from 'lodash';
 
+function processRunning(id: number) {
+    setTimeout(() => {
+        const obj = tasksOperation.getById(id);
+        if (obj) {
+            if (obj.status === '进行中') {
+                tasksOperation.updateTaskStatus(id, '已完成');
+            }
+        }
+    }, 5000);
+}
+
+function processWaiting(id: number) {
+    setTimeout(() => {
+        const obj = tasksOperation.getById(id);
+        if (obj) {
+            if (obj.status === '等待中') {
+                tasksOperation.updateTaskStatus(id, '进行中');
+                processRunning(id);
+            }
+        }
+    }, 5000);
+}
+
 export default function handler(
     req: NextApiRequest,
     res: NextApiResponse<ApiResponse<ITaskTableRowData[] | ''>>
@@ -21,7 +44,8 @@ export default function handler(
     else if (req.method === 'POST') {
         try {
             // const obj: IExportFormat = JSON.parse(req.body());
-            tasksOperation.createTask(new Date().toLocaleString(), '等待中', req.body);
+            const id = tasksOperation.createTask(new Date().toLocaleString(), '等待中', req.body);
+            processWaiting(id);
             res.status(200).json({ isOk: true, data: '', msg: '' });
         } catch (exception) {
             res.status(400).json({ isOk: false, data: '', msg: 'Request body is not valid.' });
