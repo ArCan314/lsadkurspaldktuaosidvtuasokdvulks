@@ -79,19 +79,18 @@ const option = {
         text: '排产结果',
         left: 'center'
     },
-    // dataZoom: [
-    //     {
-    //         type: 'slider',
-    //         filterMode: 'weakFilter',
-    //         showDataShadow: false,
-    //         top: 400,
-    //         labelFormatter: ''
-    //     },
-    //     {
-    //         type: 'inside',
-    //         filterMode: 'weakFilter'
-    //     }
-    // ],
+    dataZoom: [
+        {
+            type: 'slider',
+            filterMode: 'weakFilter',
+            showDataShadow: false,
+            labelFormatter: ''
+        },
+        {
+            type: 'inside',
+            filterMode: 'weakFilter'
+        }
+    ],
     grid: {
         show: true,
 
@@ -99,6 +98,7 @@ const option = {
     xAxis: {
         min: startTime,
         scale: true,
+        minInterval: 1,
         axisLabel: {
             formatter: function (val) {
                 return Math.max(0, val - startTime) + ' 小时';
