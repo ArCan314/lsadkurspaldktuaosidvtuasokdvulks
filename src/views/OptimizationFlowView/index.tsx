@@ -9,8 +9,9 @@ import { HomeOutlined, PlusOutlined, RedoOutlined } from '@ant-design/icons';
 import Apis from '@/common/apis';
 import AddTaskModal from '@/components/Modals/AddTaskModal';
 import type { ItemType } from 'antd/es/breadcrumb/Breadcrumb';
-import type { IExportFormat } from '@/types';
+import type { IExportFormat, OptimizationResult } from '@/types';
 import { Graph, SnapLine } from '@antv/g6';
+import OptimizationResultChart from '@/components/OptimizationResultChart';
 
 const { Header, Content } = Layout;
 
@@ -76,7 +77,8 @@ const EditGraphView: React.FC = () => {
     const { token: { colorBgContainer } } = theme.useToken();
     const [tableData, setTableData] = useState<ITaskTableRowData[]>();
     const [isAddTaskModalDisplay, setIsAddTaskModalDisplay] = useState<boolean>(false);
-    const [breadcrumbItems, setBreadcrumbItems] = useState<ItemType[]>([{ title: <HomeOutlined /> }, { title: '流程优化任务表' }])
+    const [breadcrumbItems, setBreadcrumbItems] = useState<ItemType[]>([{ title: <HomeOutlined /> }, { title: '流程优化任务表' }]);
+    const [optimizationResult, setOptimizationResult] = useState<OptimizationResult>([]);
 
     useEffect(() => {
         handleRefresh();
@@ -90,8 +92,11 @@ const EditGraphView: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        if (breadcrumbItems.length === 3) {
+        if (breadcrumbItems.length === 3 && breadcrumbItems[2].title === '流程查看') {
             renderFlow(content);
+        }
+        else if (breadcrumbItems.length === 3 && breadcrumbItems[2].title === '结果查看') {
+            ;
         }
         else if (breadcrumbItems.length === 2) {
             graph?.clear();
@@ -166,6 +171,23 @@ const EditGraphView: React.FC = () => {
             .catch(e => console.error(e));
     };
 
+    const handleResultShow = (taskId: number) => {
+        Apis.getOptimizationResult(taskId)
+            .then(response => response.data)
+            .then(data => {
+                if (data.isOk) {
+                    const resultData = data.data;
+                    console.log({ resultData });
+                    const copy = [...breadcrumbItems, { title: '结果查看' }];
+                    copy[1] = { title: <Typography.Link onClick={handleBack}>流程优化任务表</Typography.Link> };
+                    setBreadcrumbItems(copy);
+                    setOptimizationResult(resultData);
+                }
+                else 
+                    message.error(data.msg);
+            });
+    };
+
     return (
         <App>
             <AddTaskModal
@@ -201,12 +223,19 @@ const EditGraphView: React.FC = () => {
                             <FlowOptimizationFlowTaskTable
                                 data={tableData}
                                 onCancelTask={handleCancelTask}
-                                onFlowShow={handleFlowShow} />
+                                onFlowShow={handleFlowShow}
+                                onResultShow={handleResultShow} />
                         }
 
                         <div
                             id='graph-container'
-                            style={{ height: (breadcrumbItems.length === 3) ? '94%' : '0.01px' }} />
+                            style={{ height: (breadcrumbItems.length === 3 && breadcrumbItems[2].title === '流程查看') ? '94%' : '0.01px' }} />
+                        <div
+                            style={{ height: (breadcrumbItems.length === 3 && breadcrumbItems[2].title === '结果查看') ? '94%' : '0.01px' }}>
+                            <OptimizationResultChart 
+                                isDisplay={(breadcrumbItems.length === 3 && breadcrumbItems[2].title === '结果查看')}
+                                resultData={optimizationResult}/>
+                        </div>
                     </div>
                 </Content>
             </Layout>

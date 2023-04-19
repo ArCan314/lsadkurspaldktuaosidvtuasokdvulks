@@ -63,3 +63,7 @@ export interface IExportFormat {
     unitCount: number,
     units: IUnitModel[],
 };
+
+export type OptimaztionResultIndex = [string, string]; // [unitName, taskName]
+export type OptimaztionResultValue = [number, number, number][]; // [startTime, duration, inputAmount][]
+export type OptimizationResult = [OptimaztionResultIndex, OptimaztionResultValue][];

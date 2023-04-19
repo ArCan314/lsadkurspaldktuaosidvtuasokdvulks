@@ -39,8 +39,8 @@ function generatePanelRow() {
     return data.map((value, index) => {
         return (
             <div key={index}>
-                <Image  src={value.src} alt={value.alt} draggable className={value.class} data-shape={value.shape}
-                    onDragStart={event => event.dataTransfer.setData('shape', value.shape)}/>
+                <Image src={value.src} alt={value.alt} draggable className={value.class} data-shape={value.shape}
+                    onDragStart={event => event.dataTransfer.setData('shape', value.shape)} />
                 <div>{value.div}</div>
             </div>
         );

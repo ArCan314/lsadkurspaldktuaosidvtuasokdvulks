@@ -1,5 +1,5 @@
 import type { ITaskTableRowData } from "@/components/FlowOptimizationTaskTable";
-import type { IExportFormat } from "@/types";
+import type { IExportFormat, OptimizationResult } from "@/types";
 
 import axios from "axios";
 
@@ -14,7 +14,8 @@ class ApiConfig {
     private static readonly BASE_API_URL = `http://${this.BASE_HOST_URL}/api`;
 
     public static readonly TASKS = `${ApiConfig.BASE_API_URL}/tasks`;
-    public static readonly FLOW = `${ApiConfig.BASE_API_URL}/flow`
+    public static readonly FLOW = `${ApiConfig.BASE_API_URL}/flow`;
+    public static readonly RESULT = `${ApiConfig.BASE_API_URL}/result`;
 };
 
 export default class Apis {
@@ -32,5 +33,9 @@ export default class Apis {
 
     public static async getFlow(taskId: number) {
         return axios.get<ApiResponse<string>>(`${ApiConfig.FLOW}/${taskId}`); // string of IExportFormat
+    }
+
+    public static async getOptimizationResult(taskId: number) {
+        return axios.get<ApiResponse<OptimizationResult>>(`${ApiConfig.RESULT}/${taskId}`);
     }
 }

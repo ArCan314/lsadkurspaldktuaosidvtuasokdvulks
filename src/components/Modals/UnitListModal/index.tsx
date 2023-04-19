@@ -164,7 +164,7 @@ const UnitListModal: React.FC<IUnitListModal> = ({
 
     return (
         <Modal
-            title='导入数据'
+            title='设备列表'
             centered
             open={isDisplay}
             onCancel={handleCancel}
