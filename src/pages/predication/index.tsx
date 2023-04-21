@@ -184,7 +184,7 @@ export default function Home() {
                             <Table
                                 bordered
                                 dataSource={dataSource}
-                                columns={columns} />
+                                columns={columns as any} />
                         </div>
                     </Content>
                     <Footer style={{ textAlign: 'center' }}>Ant Design ©2023 Created by Ant UED</Footer>

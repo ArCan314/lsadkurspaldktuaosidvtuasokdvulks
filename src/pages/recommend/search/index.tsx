@@ -341,7 +341,7 @@ export default function Home() {
                                 rowClassName={() => 'editable-row'}
                                 bordered
                                 dataSource={dataSource}
-                                columns={columns as ColumnTypes} />
+                                columns={columns as any} />
                             <Button type='primary' onClick={handleAdd} style={{ marginTop: -10 }}>添加伙伴</Button>
                         </div>
                     </Content>

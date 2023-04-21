@@ -162,7 +162,7 @@ export default function Home() {
                             <Table
                                 bordered
                                 dataSource={dataSource}
-                                columns={columns} />
+                                columns={columns as any} />
                             <div style={{ textAlign: 'center' }}>
                                 <Space size={60}>
                                     <Button>取消</Button>
